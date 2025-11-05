@@ -6,31 +6,31 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace complejoDeportivo.Controllers
 {
-    [Route("api/admin/clientes")]
+    [Route("api/admin/empleados")]
     [ApiController]
-    [Authorize(Roles = "Admin,Empleado")] // Solo Admin y Empleado pueden gestionar clientes
-    public class ClienteController : ControllerBase
+    [Authorize(Roles = "Admin")] // Solo Admin puede gestionar empleados
+    public class EmpleadoController : ControllerBase
     {
-        private readonly IClienteService _service;
+        private readonly IEmpleadoService _service;
 
-        public ClienteController(IClienteService service)
+        public EmpleadoController(IEmpleadoService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ClienteDTO>>> GetAll()
+        public async Task<ActionResult<IEnumerable<EmpleadoDTO>>> GetAll()
         {
             return Ok(await _service.GetAllAsync());
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ClienteDTO>> GetById(int id)
+        public async Task<ActionResult<EmpleadoDTO>> GetById(int id)
         {
             try
             {
-                var cliente = await _service.GetByIdAsync(id);
-                return Ok(cliente);
+                var empleado = await _service.GetByIdAsync(id);
+                return Ok(empleado);
             }
             catch (NotFoundException ex)
             {
@@ -39,7 +39,7 @@ namespace complejoDeportivo.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ClienteDTO>> Create(CrearClienteDTO createDto)
+        public async Task<ActionResult<EmpleadoDTO>> Create(CrearEmpleadoDTO createDto)
         {
             if (!ModelState.IsValid)
             {
@@ -47,22 +47,22 @@ namespace complejoDeportivo.Controllers
             }
             try
             {
-                var nuevoCliente = await _service.CreateAsync(createDto);
-                return CreatedAtAction(nameof(GetById), new { id = nuevoCliente.ClienteId }, nuevoCliente);
+                var nuevoEmpleado = await _service.CreateAsync(createDto);
+                return CreatedAtAction(nameof(GetById), new { id = nuevoEmpleado.EmpleadoId }, nuevoEmpleado);
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message }); // Captura duplicados
+                return BadRequest(new { message = ex.Message });
             }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, ActualizarClienteDTO updateDto)
+        public async Task<IActionResult> Update(int id, ActualizarEmpleadoDTO updateDto)
         {
             try
             {
                 await _service.UpdateAsync(id, updateDto);
-                return NoContent(); // 204 No Content (éxito)
+                return NoContent();
             }
             catch (NotFoundException ex)
             {
@@ -70,7 +70,7 @@ namespace complejoDeportivo.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message }); // Captura duplicados
+                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -80,7 +80,7 @@ namespace complejoDeportivo.Controllers
             try
             {
                 await _service.DeleteAsync(id);
-                return NoContent(); // 204 No Content (éxito)
+                return NoContent();
             }
             catch (NotFoundException ex)
             {
@@ -88,8 +88,7 @@ namespace complejoDeportivo.Controllers
             }
             catch (Exception ex)
             {
-                // Captura error de borrado (ej. Foreign Key)
-                return BadRequest(new { message = ex.Message }); 
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

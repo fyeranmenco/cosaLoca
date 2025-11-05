@@ -1,4 +1,3 @@
-
 using complejoDeportivo.DTOs;
 
 namespace complejoDeportivo.Services.Interfaces
@@ -10,5 +9,7 @@ namespace complejoDeportivo.Services.Interfaces
 		Task<CanchaDTO> CreateAsync(CrearCanchaDTO createDto);
 		Task UpdateAsync(int id, CrearCanchaDTO updateDto);
 		Task DeleteAsync(int id);
+		Task ActivarAsync(int id);
+		Task DesactivarAsync(int id);
 	}
 }

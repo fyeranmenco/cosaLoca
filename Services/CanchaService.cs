@@ -50,8 +50,12 @@ namespace complejoDeportivo.Services.Implementations
 				throw new NotFoundException($"Cancha con ID {id} no encontrado.");
 			}
 
-			cancha = new Cancha(updateDto);
-			cancha.CanchaId = id;
+			// Actualizar propiedades
+			cancha.ComplejoId = updateDto.ComplejoId;
+			cancha.TipoCanchaId = updateDto.TipoCanchaId;
+			cancha.TipoSuperficieId = updateDto.TipoSuperficieId;
+			cancha.Nombre = updateDto.Nombre;
+			
 			await _repository.UpdateAsync(cancha);
 		}
 
@@ -63,6 +67,24 @@ namespace complejoDeportivo.Services.Implementations
 				throw new NotFoundException($"Cancha con ID {id} no encontrado.");
 			}
 			await _repository.DeleteAsync(id);
+		}
+
+		public async Task ActivarAsync(int id)
+		{
+			var result = await _repository.ActivarAsync(id);
+			if (!result)
+			{
+				throw new NotFoundException($"Cancha con ID {id} no encontrado.");
+			}
+		}
+
+		public async Task DesactivarAsync(int id)
+		{
+			var result = await _repository.DesactivarAsync(id);
+			if (!result)
+			{
+				throw new NotFoundException($"Cancha con ID {id} no encontrado.");
+			}
 		}
 	}
 }

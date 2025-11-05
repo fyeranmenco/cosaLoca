@@ -8,10 +8,13 @@ using complejoDeportivo.Repositories.Implementations;
 using complejoDeportivo.Services.Implementations;
 using complejoDeportivo.Repositories.Interfaces;
 using complejoDeportivo.Services.Interfaces;
+using complejoDeportivo.Repositories;
+using complejoDeportivo.Services;
+using complejoDeportivo.Repositories.Dashboard;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Pol�tica de CORS ---
+// --- 1. Política de CORS ---
 var corsPolicyName = "TPIPolicy";
 builder.Services.AddCors(options =>
 {
@@ -24,12 +27,12 @@ builder.Services.AddCors(options =>
                       });
 });
 
-// --- 2. Conexi�n a la Base de Datos ---
+// --- 2. Conexión a la Base de Datos ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ComplejoDeportivoContext>(options =>
     options.UseSqlServer(connectionString));
 
-// --- 3. Configuraci�n de Autenticaci�n JWT ---
+// --- 3. Configuración de Autenticación JWT ---
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -49,16 +52,51 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 	});
 builder.Services.AddAuthorization();
 
-// --- 4. Inyecci�n de Dependencias (Registrar TODO) ---
+// --- 4. Inyección de Dependencias (Registrar TODO) ---
+
+// Auth
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Usuario
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+
+// Cliente
+builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
+
+// Empleado
+builder.Services.AddScoped<IEmpleadoRepository, EmpleadoRepository>();
+builder.Services.AddScoped<IEmpleadoService, EmpleadoService>();
+
+// Complejo
+builder.Services.AddScoped<IComplejoRepository, ComplejoRepository>();
+builder.Services.AddScoped<IComplejoService, ComplejoService>();
+
+// Cancha y TipoCancha
 builder.Services.AddScoped<ITipoCanchaRepository, TipoCanchaRepository>();
 builder.Services.AddScoped<ITipoCanchaService, TipoCanchaService>();
-builder.Services.AddScoped<IUsuarioService, UsuarioService>();
-builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+builder.Services.AddScoped<ICanchaRepository, CanchaRepository>();
+builder.Services.AddScoped<ICanchaService, CanchaService>();
+
+// Reservas
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+builder.Services.AddScoped<IReservaServicie, ReservaServicie>();
+
+// Dashboard
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
 
 // --- 5. Servicios de la Plantilla ---
-builder.Services.AddControllers();
+// Añadir soporte para DateOnly y TimeOnly en JSON
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new Support.DateOnlyJsonConverter());
+        options.JsonSerializerOptions.Converters.Add(new Support.TimeOnlyJsonConverter());
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -77,3 +115,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
