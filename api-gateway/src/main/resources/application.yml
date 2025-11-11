@@ -1,0 +1,36 @@
+server:
+  port: 8080 
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: clientes_route
+          uri: http://localhost:8081 
+          predicates:
+            - Path=/api/clientes/**
+
+        - id: solicitudes_route 
+          uri: http://localhost:8082 
+          predicates:
+            - Path=/api/solicitudes/**
+
+        - id: depositos_route
+          uri: http://localhost:8083 
+          predicates:
+            - Path=/api/depositos/**
+        
+        - id: camiones_route
+          uri: http://localhost:8084 
+          predicates:
+            - Path=/api/camiones/**
+        
+        - id: integracionGM_route
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/integracionGM/**
+
+        - id: usuarios_route
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/usuarios/**

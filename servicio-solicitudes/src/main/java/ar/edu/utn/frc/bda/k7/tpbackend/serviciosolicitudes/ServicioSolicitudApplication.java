@@ -1,0 +1,21 @@
+package ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.web.client.RestTemplate;
+
+@SpringBootApplication
+@EnableJpaRepositories(basePackages = "ar.edu.utn.frc.bda.k7.tpbackend.serviciopedidos.repository")
+public class ServicioSolicitudApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ServicioSolicitudApplication.class, args);
+    }
+    
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
