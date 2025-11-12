@@ -2,35 +2,41 @@ server:
   port: 8080 
 
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8181/realms/tpbackend
+
   cloud:
     gateway:
       routes:
         - id: clientes_route
-          uri: http://localhost:8081 
+          uri: lb://clientes
           predicates:
             - Path=/api/clientes/**
+          filters:
+            - RewritePath=/api/clientes(?<segment>.*), $${segment}
+
 
         - id: solicitudes_route 
-          uri: http://localhost:8082 
+          uri: lb://solicitudes
           predicates:
             - Path=/api/solicitudes/**
+          filters:
+            - RewritePath=/api/solicitudes(?<segment>.*), $${segment}
 
         - id: depositos_route
-          uri: http://localhost:8083 
+          uri: lb://depositos
           predicates:
             - Path=/api/depositos/**
+          filters:
+            - RewritePath=/api/depositos(?<segment>.*), $${segment}
+
         
         - id: camiones_route
-          uri: http://localhost:8084 
+          uri: lb://camiones
           predicates:
             - Path=/api/camiones/**
-        
-        - id: integracionGM_route
-          uri: http://localhost:8085
-          predicates:
-            - Path=/api/integracionGM/**
-
-        - id: usuarios_route
-          uri: http://localhost:8086
-          predicates:
-            - Path=/api/usuarios/**
+          filters:
+            - RewritePath=/api/camiones(?<segment>.*), $${segment}

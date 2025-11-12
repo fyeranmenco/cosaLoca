@@ -1,0 +1,127 @@
+services:
+  keycloak-db:
+    image: postgres:15-alpine
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloakpassword
+    volumes:
+      - keycloak-postgres-data:/var/lib/postgresql/data
+    networks:
+      - tp-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: >
+      start-dev
+      --http-port=8181
+
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloakpassword
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_PORT: 8181   
+    ports:
+      - "8080:8181"
+
+    networks:
+      - tp-network
+    
+    depends_on:
+      - keycloak-db
+
+  api-gateway:
+    build: { context: ./api-gateway, dockerfile: Dockerfile }
+    container_name: api-gateway
+    ports: 
+      - "8080:8080"
+    depends_on: 
+      - keycloak
+      - clientes
+      - solicitudes
+      - camiones
+      - depositos
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8181/realms/tpbackend
+    networks:
+      - tp-network
+
+  clientes:
+    build: { context: ./servicio-clientes, dockerfile: Dockerfile }
+    container_name: clientes
+    ports: 
+      - "8081:8081"
+    depends_on: 
+      - keycloak
+    volumes:
+      - clientes-data:/opt/h2-data
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8181/realms/tpbackend
+    networks:
+      - tp-network
+
+  solicitudes:
+    build: { context: ./servicio-solicitudes, dockerfile: Dockerfile }
+    container_name: solicitudes
+    ports: 
+      - "8082:8082"
+
+    depends_on: 
+      - keycloak
+      - clientes
+      - depositos
+      - camiones
+
+    volumes:
+      - depositos-data:/opt/h2-data
+
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8181/realms/tpbackend
+    networks:
+      - tp-network
+
+  depositos:
+    build: { context: ./servicio-depositos, dockerfile: Dockerfile }
+    container_name: depositos
+    ports: 
+      - "8083:8083"
+    depends_on: 
+      - keycloak
+    volumes:
+      - depositos-data:/opt/h2-data
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8181/realms/tpbackend
+    networks:
+      - tp-network
+
+  camiones:
+    build: { context: ./servicio-camiones, dockerfile: Dockerfile }
+    container_name: camiones
+    ports: 
+      - "8084:8084"
+    depends_on: 
+      - keycloak
+    volumes:
+      - camiones-data:/opt/h2-data
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8181/realms/tpbackend
+    networks:
+      - tp-network
+
+networks:
+  tp-network:
+    driver: bridge
+
+volumes:
+  clientes-data:
+  solicitudes-data:
+  camiones-data:
+  depositos-data:
+  keycloak-postgres-data:

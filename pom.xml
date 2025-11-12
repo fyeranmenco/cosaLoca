@@ -33,8 +33,6 @@
 	<module>servicio-solicitudes</module>
 	<module>servicio-depositos</module>
 	<module>servicio-camiones</module>
-	<module>servicio-integracionGM</module>
-	<module>servicio-usuarios</module>
   </modules>
 
   <dependencyManagement>
