@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,7 @@ public class ClienteController implements IClienteRestAPI {
 
     @Override
     @PostMapping
+	@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Cliente> crearCliente(@RequestBody Cliente cliente) {
         Cliente nuevoCliente = clienteService.guardarCliente(cliente);
         return new ResponseEntity<>(nuevoCliente, HttpStatus.CREATED);
@@ -50,6 +52,7 @@ public class ClienteController implements IClienteRestAPI {
     @Override
     @GetMapping("/{dNI}/existe")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+	@PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> verificarExistenciaCliente(@PathVariable Long dNI) {
         if (clienteService.existeCliente(dNI)) {
             return ResponseEntity.noContent().build(); 

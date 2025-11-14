@@ -1,4 +1,4 @@
-package ar.edu.utn.frc.bda.k7.tpbackend.servicioclientes.config;
+package ar.edu.utn.frc.bda.k7.tpbackend.serviciodepositos.config;
 
 import java.util.List;
 import java.util.Map;

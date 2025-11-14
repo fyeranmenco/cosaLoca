@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "ar.edu.utn.frc.bda.k7.tpbackend.serviciopedidos.repository")
+@EnableJpaRepositories(basePackages = "ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.repository")
 public class ServicioSolicitudApplication {
 
     public static void main(String[] args) {

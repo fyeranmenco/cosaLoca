@@ -12,11 +12,19 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data @AllArgsConstructor @NoArgsConstructor 
 public class Camion {
-    @Id
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	private Long id;
     
-    private String nombre;
-    private double precio;
-    private int stock; 
+    private String dominio; 
+    private String nombreTransportista;
+    private String telefonoTransportista;
+    
+    private Double capacidadPeso; 
+    private Double capacidadVolumen; 
+    
+    private Double consumoCombustibleKm; 
+    private Double costoTrasladoPorKm; 
+    
+    private Boolean disponible; 
 }

@@ -7,5 +7,4 @@ import ar.edu.utn.frc.bda.k7.tpbackend.servicioclientes.model.Cliente;
 
 @Repository
 public interface PersistenciaCliente extends JpaRepository<Cliente, Long> {
-    
 }

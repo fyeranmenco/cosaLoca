@@ -6,37 +6,115 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8181/realms/tpbackend
+          jwt-set-uri: http://localhost:8182/realms/tpbackend/protocol/openid-connect/certs
+      provider:
+          keycloak:
+            issuer-uri: http://localhost:8182/realms/tpbackend
 
   cloud:
     gateway:
       routes:
-        - id: clientes_route
-          uri: lb://clientes
+
+        # ====================================================
+        # 1. RUTA CRÍTICA DE AUTENTICACIÓN (KEYCLOAK)
+        # ====================================================
+        - id: keycloak_auth
+          uri: http://keycloak:8182 # <-- URL directa (ya estaba así)
           predicates:
-            - Path=/api/clientes/**
+            - Path=/realms/tpbackend/**
+        
+        # ====================================================
+        # 2. RUTAS DE DOCUMENTACIÓN (SWAGGER)
+        # ====================================================
+        
+        # --- CLIENTES (Swagger) ---
+        - id: swagger_clientes_ui
+          uri: http://clientes:8081 # <-- CORRECCIÓN: URL Directa
+          predicates:
+            - Path=/api/clientes/swagger-ui/**
           filters:
-            - RewritePath=/api/clientes(?<segment>.*), $${segment}
+            - RewritePath=/api/clientes(.*), $1
+        - id: docs_clientes 
+          uri: http://clientes:8081 # <-- CORRECCIÓN: URL Directa
+          predicates:
+            - Path=/api/clientes/v3/api-docs/**
+          filters:
+            - RewritePath=/api/clientes(.*), $1
 
+        # --- SOLICITUDES (Swagger) ---
+        - id: swagger_solicitudes_ui
+          uri: http://solicitudes:8082 # <-- CORRECCIÓN: URL Directa
+          predicates:
+            - Path=/api/solicitudes/swagger-ui/**
+          filters:
+            - RewritePath=/api/solicitudes(.*), $1
+        - id: docs_solicitudes
+          uri: http://solicitudes:8082 # <-- CORRECCIÓN: URL Directa
+          predicates:
+            - Path=/api/solicitudes/v3/api-docs/**
+          filters:
+            - RewritePath=/api/solicitudes(.*), $1
 
+        # --- DEPÓSITOS (Swagger) ---
+        - id: swagger_depositos_ui
+          uri: http://depositos:8083 # <-- CORRECCIÓN: URL Directa
+          predicates:
+            - Path=/api/depositos/swagger-ui/**
+          filters:
+            - RewritePath=/api/depositos(.*), $1
+        - id: docs_depositos
+          uri: http://depositos:8083 # <-- CORRECCIÓN: URL Directa
+          predicates:
+            - Path=/api/depositos/v3/api-docs/**
+          filters:
+            - RewritePath=/api/depositos(.*), $1
+
+        # --- CAMIONES (Swagger) ---
+        - id: swagger_camiones_ui
+          uri: http://camiones:8084 # <-- CORRECCIÓN: URL Directa
+          predicates:
+            - Path=/api/camiones/swagger-ui/**
+          filters:
+            - RewritePath=/api/camiones(.*), $1
+        - id: docs_camiones
+          uri: http://camiones:8084 # <-- CORRECCIÓN: URL Directa
+          predicates:
+            - Path=/api/camiones/v3/api-docs/**
+          filters:
+            - RewritePath=/api/camiones(.*), $1
+
+        # ====================================================
+        # 3. RUTAS DE SERVICIOS (DATOS)
+        # ====================================================
+        
+        # --- Clientes (API) ---
+        - id: clientes_route
+          uri: http://clientes:8081 # <-- CORRECCIÓN: URL Directa
+          predicates:
+          - Path=/api/clientes/** 
+          filters:
+            - RewritePath=/api/clientes(.*), /api/clientes$1
+            
+        # --- Solicitudes (API) ---
         - id: solicitudes_route 
-          uri: lb://solicitudes
+          uri: http://solicitudes:8082 # <-- CORRECCIÓN: URL Directa
           predicates:
             - Path=/api/solicitudes/**
           filters:
-            - RewritePath=/api/solicitudes(?<segment>.*), $${segment}
-
+            - RewritePath=/api/solicitudes(.*), /api/solicitudes$1
+            
+        # --- Depósitos (API) ---
         - id: depositos_route
-          uri: lb://depositos
+          uri: http://depositos:8083 # <-- CORRECCIÓN: URL Directa
           predicates:
             - Path=/api/depositos/**
           filters:
-            - RewritePath=/api/depositos(?<segment>.*), $${segment}
+            - RewritePath=/api/depositos(.*), /api/depositos$1
 
-        
+        # --- Camiones (API) ---
         - id: camiones_route
-          uri: lb://camiones
+          uri: http://camiones:8084 # <-- CORRECCIÓN: URL Directa
           predicates:
             - Path=/api/camiones/**
           filters:
-            - RewritePath=/api/camiones(?<segment>.*), $${segment}
+            - RewritePath=/api/camiones(.*), /api/camiones$1

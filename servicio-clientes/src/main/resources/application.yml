@@ -1,0 +1,32 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:h2:file:/opt/h2-data/clientes-db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwt-set-uri: http://keycloak:8182/realms/tpbackend/protocol/openid-connect/certs
+      client:
+        registration:
+          keycloak:
+            client-id: swagger-ui
+            authorization-grant-type: authorization_code
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8182/realms/tpbackend
+springdoc:
+  swagger-ui:
+    config-url: /api/clientes/v3/api-docs/swagger-config
