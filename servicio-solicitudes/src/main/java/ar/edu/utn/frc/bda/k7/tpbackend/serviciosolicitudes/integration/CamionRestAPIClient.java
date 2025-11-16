@@ -2,28 +2,26 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.integration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-
+import org.springframework.web.client.RestClient; // <-- Importar
+import org.springframework.core.ParameterizedTypeReference; // <-- Importar para Listas
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.dtos.CamionDTO;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-// import reactor.core.publisher.Mono;
-
 import java.util.List;
 import java.util.Map;
 
 @Component
 public class CamionRestAPIClient {
 
-    private final WebClient webClient;
+    private final RestClient restClient; // <-- Cambiado
     
 	public CamionRestAPIClient(@Value("${service.camion.url}") String camionServiceUrl) {
-        this.webClient = WebClient.builder().baseUrl(camionServiceUrl).build();
+        // <-- Cambiado
+        this.restClient = RestClient.builder().baseUrl(camionServiceUrl).build();
     }
 
     public CamionDTO[] obtenerCamionesDisponibles(Double peso, Double volumen, String token) {
-        return webClient.get()
+        return restClient.get() // <-- Cambiado
                 .uri(uriBuilder -> uriBuilder
                         .path("/disponibles/aptos")
                         .queryParam("peso", peso)
@@ -32,38 +30,34 @@ public class CamionRestAPIClient {
                 .headers(headers -> headers.setBearerAuth(token))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(CamionDTO[].class)
-                .block(); 
+                .body(CamionDTO[].class); // <-- Sin .block()
     }
 
 	public CamionDTO obtenerCamionPorId(Long camionId, String token) {
-        return webClient.get()
+        return restClient.get() // <-- Cambiado
                 .uri("/{id}", camionId)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(CamionDTO.class)
-                .block(); // Asumimos que el admin/transportista tiene permiso
+                .body(CamionDTO.class); // <-- Sin .block()
     }
 
     public void actualizarDisponibilidad(Long camionId, boolean disponible, String token) {
-        webClient.put()
+        restClient.put() // <-- Cambiado
                 .uri("/{id}/disponibilidad", camionId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(Map.of("disponible", disponible))
+                .body(Map.of("disponible", disponible)) // <-- .body() en lugar de .bodyValue()
                 .retrieve()
-                .toBodilessEntity()
-                .block();
+                .toBodilessEntity(); // <-- Sin .block()
     }
 
-	@SuppressWarnings("unchecked")
 	public List<CamionDTO> obtenerMisCamiones(String token) {
-        return webClient.get()
+        return restClient.get() // <-- Cambiado
                 .uri("/mis-camiones")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(List.class) // Obtiene la lista genérica
-                .block(); 
+                // --- sintaxis de RestClient para listas genéricas ---
+                .body(new ParameterizedTypeReference<List<CamionDTO>>() {});
     }
 }

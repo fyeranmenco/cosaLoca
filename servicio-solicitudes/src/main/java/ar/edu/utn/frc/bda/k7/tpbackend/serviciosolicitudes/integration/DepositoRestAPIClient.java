@@ -5,24 +5,25 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestClient; // <-- Importar
+// import reactor.core.publisher.Mono; // <-- Ya no se usa
 
 @Component
 public class DepositoRestAPIClient {
 
-    private final WebClient webClient;
+    private final RestClient restClient; // <-- Cambiado
 
     public DepositoRestAPIClient(@Value("${service.deposito.url}") String depositoServiceUrl) {
-        this.webClient = WebClient.builder().baseUrl(depositoServiceUrl).build();
+        // <-- Cambiado
+        this.restClient = RestClient.builder().baseUrl(depositoServiceUrl).build();
     }
 
-    public Mono<DepositoDTO> obtenerDepositoPorId(Long id, String token) {
-        return webClient.get()
+    public DepositoDTO obtenerDepositoPorId(Long id, String token) {
+        return restClient.get() // <-- Cambiado
                 .uri("/{id}", id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(DepositoDTO.class);
+                .body(DepositoDTO.class); // <-- Sin Mono ni .block()
     }
 }

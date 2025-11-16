@@ -6,7 +6,6 @@ import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.dtos.*;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.dtos.osrm.*;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.repository.PersistenciaSolicitud;
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Mono;
 
 import org.springframework.stereotype.Service;
 
@@ -66,7 +65,7 @@ public class SolicitudService {
 		String coordsOrigen = String.format("%s,%s", request.longitudOrigen(), request.latitudOrigen());
         String coordsDestino = String.format("%s,%s", request.longitudDestino(), request.latitudDestino());
         
-        OsrmResponse osrmResponse = osrmClient.obtenerRutasAlternativas(coordsOrigen, coordsDestino).block();
+        OsrmResponse osrmResponse = osrmClient.obtenerRutasAlternativas(coordsOrigen, coordsDestino);
         if (osrmResponse == null || osrmResponse.getRoutes() == null || osrmResponse.getRoutes().isEmpty()) {
             throw new RuntimeException("No se pudo calcular una ruta entre el origen y el destino.");
         }
@@ -126,53 +125,47 @@ public class SolicitudService {
 
 	public List<TramoSugeridoDTO> obtenerTramosSugeridos(Long idDepositoOrigen, Long idDepositoDestino, String token) {
         
-        // 1. Obtener Depósitos (llamada asíncrona a otro microservicio)
-        Mono<DepositoDTO> monoOrigen = depositoClient.obtenerDepositoPorId(idDepositoOrigen, token);
-        Mono<DepositoDTO> monoDestino = depositoClient.obtenerDepositoPorId(idDepositoDestino, token);
+    // 1. Obtener Depósitos (Ahora son llamadas sincrónicas/bloqueantes)
+    DepositoDTO origen = depositoClient.obtenerDepositoPorId(idDepositoOrigen, token);
+    DepositoDTO destino = depositoClient.obtenerDepositoPorId(idDepositoDestino, token);
 
-        // 2. Combinar las respuestas
-        OsrmResponse osrmResponse = Mono.zip(monoOrigen, monoDestino)
-            .flatMap(tupla -> {
-                DepositoDTO origen = tupla.getT1();
-                DepositoDTO destino = tupla.getT2();
+    // 2. Formatear coordenadas
+    // Formato OSRM: lon,lat
+    String coordsOrigen = String.format("%s,%s", origen.getLongitud(), origen.getLatitud());
+    String coordsDestino = String.format("%s,%s", destino.getLongitud(), destino.getLatitud());
+    
+    // 3. Llamar a OSRM (Ahora es una llamada sincrónica/bloqueante)
+    OsrmResponse osrmResponse = osrmClient.obtenerRutasAlternativas(coordsOrigen, coordsDestino);
 
-                // Formato OSRM: lon,lat
-                String coordsOrigen = String.format("%s,%s", origen.getLongitud(), origen.getLatitud());
-                String coordsDestino = String.format("%s,%s", destino.getLongitud(), destino.getLatitud());
-                
-                // 3. Llamar a OSRM
-                return osrmClient.obtenerRutasAlternativas(coordsOrigen, coordsDestino);
-            })
-            .block(); // .block() para simplificar (en un entorno real, manejarías reactivamente)
-
-        if (osrmResponse == null || osrmResponse.getRoutes() == null || osrmResponse.getRoutes().isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<OsrmRoute> todasLasRutas = osrmResponse.getRoutes();
-
-        // 4. Aplicar REGLA DE 8 HORAS
-        List<OsrmRoute> rutasValidas = todasLasRutas.stream()
-            .filter(ruta -> ruta.getDuration() <= MAX_DURACION_SEGUNDOS)
-            .sorted(Comparator.comparingDouble(OsrmRoute::getDuration))
-            .collect(Collectors.toList());
-
-        // 5. Decidir qué devolver
-        if (!rutasValidas.isEmpty()) {
-            // Caso A: Hay rutas < 8h. Devolver las 3 más rápidas.
-            return rutasValidas.stream()
-                .limit(3) // "mostrar 2 o 3"
-                .map(this::convertirARutaSugerida)
-                .collect(Collectors.toList());
-        } else {
-            // Caso B: NO hay rutas < 8h. Devolver la "menos mala".
-            return todasLasRutas.stream()
-                .min(Comparator.comparingDouble(OsrmRoute::getDuration))
-                .map(this::convertirARutaSugerida)
-                .map(List::of) // Lo convierte en una lista de 1 elemento
-                .orElse(Collections.emptyList());
-        }
+    // 4. Lógica de negocio (Esta parte no cambia, ya era sincrónica)
+    if (osrmResponse == null || osrmResponse.getRoutes() == null || osrmResponse.getRoutes().isEmpty()) {
+        return Collections.emptyList();
     }
+
+    List<OsrmRoute> todasLasRutas = osrmResponse.getRoutes();
+
+    // 5. Aplicar REGLA DE 8 HORAS
+    List<OsrmRoute> rutasValidas = todasLasRutas.stream()
+        .filter(ruta -> ruta.getDuration() <= MAX_DURACION_SEGUNDOS)
+        .sorted(Comparator.comparingDouble(OsrmRoute::getDuration))
+        .collect(Collectors.toList());
+
+    // 6. Decidir qué devolver
+    if (!rutasValidas.isEmpty()) {
+        // Caso A: Hay rutas < 8h. Devolver las 3 más rápidas.
+        return rutasValidas.stream()
+            .limit(3) // "mostrar 2 o 3"
+            .map(this::convertirARutaSugerida)
+            .collect(Collectors.toList());
+    } else {
+        // Caso B: NO hay rutas < 8h. Devolver la "menos mala".
+        return todasLasRutas.stream()
+            .min(Comparator.comparingDouble(OsrmRoute::getDuration))
+            .map(this::convertirARutaSugerida)
+            .map(List::of) // Lo convierte en una lista de 1 elemento
+            .orElse(Collections.emptyList());
+    }
+}
 
 	private TramoSugeridoDTO convertirARutaSugerida(OsrmRoute ruta) {
         long duracion = (long) ruta.getDuration();

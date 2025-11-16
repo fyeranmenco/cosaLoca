@@ -2,6 +2,7 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciotarifas.controller;
 
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciotarifas.model.Tarifa;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciotarifas.model.dtos.ActualizarTarifaDTO;
+import ar.edu.utn.frc.bda.k7.tpbackend.serviciotarifas.model.dtos.CrearTarifaDTO;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciotarifas.service.TarifaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +23,15 @@ public class TarifaController {
         return ResponseEntity.ok(tarifaService.getAll());
     }
 
+	@PostMapping()
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<Tarifa> crearTarifa(@RequestBody CrearTarifaDTO dto) {
+		return ResponseEntity.ok(tarifaService.crearTarifa(dto));
+	}
+
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Tarifa> crearOActualizarTarifa(@RequestBody ActualizarTarifaDTO dto) {
-        return ResponseEntity.ok(tarifaService.crearOActualizar(dto));
+    public ResponseEntity<Tarifa> actualizarTarifa(@RequestBody ActualizarTarifaDTO dto) {
+        return ResponseEntity.ok(tarifaService.actualizarTarifa(dto));
     }
 }

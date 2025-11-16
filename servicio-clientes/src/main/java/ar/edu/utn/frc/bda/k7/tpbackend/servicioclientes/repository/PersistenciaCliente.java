@@ -9,7 +9,7 @@ import ar.edu.utn.frc.bda.k7.tpbackend.servicioclientes.model.Cliente;
 
 @Repository
 public interface PersistenciaCliente extends JpaRepository<Cliente, Long> {
-	Optional<Cliente> findByKeycloakId(String keycloakId);
+	Optional<Cliente> findByIdUsuarioKeyCloak(String keycloakId);
     
-    boolean existsByKeycloakId(String keycloakId);
+    boolean existsByIdUsuarioKeyCloak(String keycloakId);
 }

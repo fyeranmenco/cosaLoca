@@ -50,7 +50,7 @@ services:
       - tp-network
     volumes:
       - ./osrm-data:/data   
-    command: osrm-routed --algorithm mld /data/argentina-latest.osrm
+    command: osrm-routed --algorithm mld /data/argentina-251115.osrm
 
   api-gateway:
     build: { context: ./api-gateway, dockerfile: Dockerfile }

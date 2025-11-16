@@ -9,5 +9,5 @@ import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.model.Camion;
 
 @Repository
 public interface PersistenciaCamion extends JpaRepository<Camion, Long> {
-	List<Camion> findByKeycloakId(String keycloakId);
+	List<Camion> findByChoferIdUsuarioKeyCloak(String keycloakId);
 }

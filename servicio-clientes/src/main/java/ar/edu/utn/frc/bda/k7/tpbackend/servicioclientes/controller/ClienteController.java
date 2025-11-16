@@ -83,7 +83,6 @@ public class ClienteController implements IClienteRestAPI {
     }
 
 	@PostMapping("/registrarme")
-    @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<Cliente> registrarme(@RequestBody Cliente cliente, @AuthenticationPrincipal Jwt principal) {
         String keycloakId = principal.getClaimAsString("sub");
         Cliente nuevoCliente = clienteService.registrarMiPerfil(cliente, keycloakId);

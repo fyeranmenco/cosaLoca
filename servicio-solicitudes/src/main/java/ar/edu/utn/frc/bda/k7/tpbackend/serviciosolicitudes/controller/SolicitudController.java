@@ -106,12 +106,6 @@ public class SolicitudController {
         }
     }
 
-	@GetMapping("/contenedores/pendientes")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Solicitud>> getContenedoresPendientes() {
-        return ResponseEntity.ok(solicitudService.getContenedoresPendientes());
-    }
-
     @GetMapping("/{id}/costo_real")
     @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
     public ResponseEntity<Double> getCostoReal(@PathVariable Long id) {

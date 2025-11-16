@@ -54,6 +54,6 @@ public class CamionService {
     }
 
     public List<Camion> obtenerMisCamiones(String keycloakId) {
-        return persistenciaCamion.findByKeycloakId(keycloakId);
+        return persistenciaCamion.findByChoferIdUsuarioKeyCloak(keycloakId);
     }
 }

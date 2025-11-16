@@ -2,59 +2,49 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.integration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-
+import org.springframework.web.client.RestClient; // <-- Importar
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.dtos.ClienteDTO;
-
 import org.springframework.http.HttpHeaders;
-// import reactor.core.publisher.Mono;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Component
 public class ClienteRestAPIClient {
 
-    private final WebClient webClient;
+    private final RestClient restClient; // <-- Cambiado
 
     public ClienteRestAPIClient(@Value("${service.cliente.url}") String clienteServiceUrl) {
-        this.webClient = WebClient.builder().baseUrl(clienteServiceUrl).build();
+        // <-- Cambiado
+        this.restClient = RestClient.builder().baseUrl(clienteServiceUrl).build();
     }
 
-    public boolean existeCliente(Long clienteDNI, String token) {
-        try {
-            System.out.println("Token recibido en ClienteRestAPIClient: " + token);
-
-            webClient.get()
-                    .uri("/{dNI}/existe", clienteDNI)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
-
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
+    // Método obsoleto eliminado (existeCliente por DNI)
 
 	public boolean existeClientePorKeycloakId(String token) {
         try {
-            webClient.get()
-                    .uri("/existe/keycloak") // <-- Llama al nuevo endpoint
+            restClient.get() // <-- Cambiado
+                    .uri("/existe/keycloak")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                     .retrieve()
-                    .toBodilessEntity()
-                    .block();
+                    .toBodilessEntity(); // <-- Sin .block()
             return true;
+        } catch (HttpClientErrorException e) {
+            // Si da 404 (Not Found), el cliente no existe
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return false;
+            }
+            // Si es otro error (401, 500), lanza la excepción
+            throw e;
         } catch (Exception e) {
             return false;
         }
     }
 
 	public ClienteDTO getClientePorKeycloakId(String token) {
-        return webClient.get()
-                .uri("/keycloak") // <-- Llama al nuevo endpoint
+        return restClient.get() // <-- Cambiado
+                .uri("/keycloak")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .retrieve()
-                .bodyToMono(ClienteDTO.class)
-                .block();
+                .body(ClienteDTO.class); // <-- Sin .block()
     }
 }
