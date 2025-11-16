@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,5 +68,40 @@ public class ClienteController implements IClienteRestAPI {
         } else {
             return ResponseEntity.notFound().build(); 
         }
+    }
+
+	@GetMapping("/existe/keycloak")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+	@PreAuthorize("isAuthenticated()") // Seguridad interna
+    public ResponseEntity<Void> verificarExistenciaClientePorKeycloakId(@AuthenticationPrincipal Jwt principal) {
+        String keycloakId = principal.getClaimAsString("sub");
+        if (clienteService.existeClientePorKeycloakId(keycloakId)) {
+            return ResponseEntity.noContent().build(); 
+        } else {
+            return ResponseEntity.notFound().build(); 
+        }
+    }
+
+	@PostMapping("/registrarme")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<Cliente> registrarme(@RequestBody Cliente cliente, @AuthenticationPrincipal Jwt principal) {
+        String keycloakId = principal.getClaimAsString("sub");
+        Cliente nuevoCliente = clienteService.registrarMiPerfil(cliente, keycloakId);
+        return new ResponseEntity<>(nuevoCliente, HttpStatus.CREATED);
+    }
+
+	@GetMapping("/keycloak")
+	@PreAuthorize("isAuthenticated()") // Seguridad interna
+    public ResponseEntity<Cliente> getClientePorKeycloakId(@AuthenticationPrincipal Jwt principal) {
+        String keycloakId = principal.getClaimAsString("sub");
+        return ResponseEntity.ok(clienteService.obtenerClientePorKeycloakId(keycloakId));
+    }
+    
+    // --- NUEVO ENDPOINT (para Clientes) ---
+    @GetMapping("/mi-perfil")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<Cliente> getMiPerfil(@AuthenticationPrincipal Jwt principal) {
+        String keycloakId = principal.getClaimAsString("sub");
+        return ResponseEntity.ok(clienteService.obtenerMiPerfil(keycloakId));
     }
 }

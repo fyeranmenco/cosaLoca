@@ -83,6 +83,19 @@ spring:
           filters:
             - RewritePath=/api/camiones(.*), $1
 
+        - id: swagger_tarifas_ui
+          uri: http://tarifas:8085
+          predicates:
+            - Path=/api/tarifas/swagger-ui/**
+          filters:
+            - RewritePath=/api/tarifas(.*), $1
+        - id: docs_tarifas
+          uri: http://tarifas:8085
+          predicates:
+            - Path=/api/tarifas/v3/api-docs/**
+          filters:
+            - RewritePath=/api/tarifas(.*), $1
+
         # ====================================================
         # 3. RUTAS DE SERVICIOS (DATOS)
         # ====================================================
@@ -118,3 +131,11 @@ spring:
             - Path=/api/camiones/**
           filters:
             - RewritePath=/api/camiones(.*), /api/camiones$1
+        
+        # --- Tarifas (API) ---
+        - id: tarifas_route
+          uri: http://tarifas:8085
+          predicates:
+            - Path=/api/tarifas/**
+          filters:
+            - RewritePath=/api/tarifas(.*), /api/tarifas$1

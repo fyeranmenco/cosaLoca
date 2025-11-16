@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -31,7 +32,8 @@ public class SolicitudController {
     @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
     public ResponseEntity<Solicitud> crearSolicitud(@RequestBody SolicitudRequestDTO request, @AuthenticationPrincipal Jwt principal) {
         String token = principal.getTokenValue();
-        return ResponseEntity.ok(solicitudService.crearSolicitud(request, token));
+        // El DTO ya no tiene DNI, el servicio lo obtiene del token
+        return ResponseEntity.ok(solicitudService.crearSolicitud(request, token)); 
     }
 
 	@GetMapping("/tramos/sugeridos")
@@ -83,7 +85,15 @@ public class SolicitudController {
             @RequestBody String estado, // "INICIAR" o "FINALIZAR"
             @AuthenticationPrincipal Jwt principal) {
         String transportistaKeycloakId = principal.getClaimAsString("sub");
+		try {
         return ResponseEntity.ok(solicitudService.actualizarEstadoTramo(solicitudId, tramoId, estado, transportistaKeycloakId, principal.getTokenValue()));
+		} catch (NoSuchElementException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		} catch (AccessDeniedException e) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		}
     }
 
 	@GetMapping("/{id}/costo_estimado")
@@ -96,6 +106,12 @@ public class SolicitudController {
         }
     }
 
+	@GetMapping("/contenedores/pendientes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Solicitud>> getContenedoresPendientes() {
+        return ResponseEntity.ok(solicitudService.getContenedoresPendientes());
+    }
+
     @GetMapping("/{id}/costo_real")
     @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
     public ResponseEntity<Double> getCostoReal(@PathVariable Long id) {
@@ -106,6 +122,13 @@ public class SolicitudController {
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // O un DTO de error
         }
+    }
+
+	@GetMapping("/contenedores/pendientes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Solicitud>> getContenedoresPendientes(
+            @RequestParam(required = false) String estado) { // <-- Filtro añadido
+        return ResponseEntity.ok(solicitudService.getContenedoresPendientes(estado));
     }
 
     @GetMapping("/{id}/tiempo_estimado") // 'image.png' dice /tiempo, pero estimad/real es más claro
@@ -128,5 +151,12 @@ public class SolicitudController {
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); 
         }
+    }
+
+	@GetMapping("/tramos/mis-asignaciones")
+    @PreAuthorize("hasRole('TRANSPORTISTA')")
+    public ResponseEntity<List<Tramo>> getMisTramosAsignados(@AuthenticationPrincipal Jwt principal) {
+        String token = principal.getTokenValue();
+        return ResponseEntity.ok(solicitudService.obtenerMisTramosAsignados(token));
     }
 }

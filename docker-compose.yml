@@ -166,7 +166,28 @@ services:
           action: sync
         - path: ./servicio-camiones/Dockerfile
           action: rebuild
-         
+
+  tarifas:
+    build: { context: ./servicio-tarifas, dockerfile: Dockerfile }
+    container_name: tarifas
+    ports:
+      - "8085:8085"
+    depends_on:
+      - keycloak
+    volumes:
+      - tarifas-data:/opt/h2-data
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8181/realms/tpbackend/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8181/realms/tpbackend
+    networks:
+      - tp-network
+    develop:
+      watch:
+        - path: ./servicio-tarifas/target/app.jar
+          target: /application/app.jar
+          action: sync
+        - path: ./servicio-tarifas/Dockerfile
+          action: rebuild
 
 networks:
   tp-network:
@@ -177,4 +198,5 @@ volumes:
   solicitudes-data:
   camiones-data:
   depositos-data:
+  tarifas-data:
   keycloak-postgres-data:

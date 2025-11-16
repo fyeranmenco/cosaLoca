@@ -3,6 +3,9 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.integration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.dtos.ClienteDTO;
+
 import org.springframework.http.HttpHeaders;
 // import reactor.core.publisher.Mono;
 
@@ -30,5 +33,28 @@ public class ClienteRestAPIClient {
         } catch (Exception e) {
             return false;
         }
+    }
+
+	public boolean existeClientePorKeycloakId(String token) {
+        try {
+            webClient.get()
+                    .uri("/existe/keycloak") // <-- Llama al nuevo endpoint
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+	public ClienteDTO getClientePorKeycloakId(String token) {
+        return webClient.get()
+                .uri("/keycloak") // <-- Llama al nuevo endpoint
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .bodyToMono(ClienteDTO.class)
+                .block();
     }
 }

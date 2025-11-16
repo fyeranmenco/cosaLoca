@@ -1,0 +1,13 @@
+FROM eclipse-temurin:17 
+
+WORKDIR /application
+
+# ARG JAR_FILE=target/servicio-camiones-1.0-SNAPSHOT.jar
+
+# COPY ${JAR_FILE} app.jar
+
+COPY target/*.jar app.jar
+
+EXPOSE 8085
+
+ENTRYPOINT [ "java", "-jar", "app.jar" ]

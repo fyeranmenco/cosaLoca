@@ -10,12 +10,14 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException; // <-- Importar
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -27,24 +29,28 @@ public class SolicitudService {
     private final ClienteRestAPIClient clienteClient;
     private final CamionRestAPIClient camionClient;
 	private final DepositoRestAPIClient depositoClient;
+	private final TarifaRestAPIClient tarifaClient; // Inyectamos el CLIENTE
     private final OsrmRestAPIClient osrmClient;
 
-    private static final double MAX_DURACION_SEGUNDOS = 8 * 60 * 60; // 8 horas'
-	private static final Double PRECIO_LITRO_COMBUSTIBLE = 1000.0; // Valor de ejemplo
-    private static final Double CARGO_GESTION_TRAMO_SIMPLE = 50000.0; 
-    private static final Double COSTO_ESTADIA_DEPOSITO_DIA = 20000.0; 
+	private static final long HORAS_ESPERA_EN_DEPOSITO = 8; // 8 horas de espera
+	private static final long MAX_DURACION_SEGUNDOS = HORAS_ESPERA_EN_DEPOSITO * 3600; // 8 horas en segundos
 
 
     public Solicitud crearSolicitud(SolicitudRequestDTO request, String token) {
         
-        if (!clienteClient.existeCliente(request.clienteDNI(), token)) {
-             throw new RuntimeException("El Cliente con DNI " + request.clienteDNI() + " no existe.");
+        if (!clienteClient.existeClientePorKeycloakId(token)) {
+             throw new RuntimeException("Cliente no registrado. Por favor, complete su perfil antes de crear una solicitud.");
+             // (Aquí se cumple RF 1.2: el sistema detecta que no existe)
+             // (El usuario debería ser redirigido al frontend de "registrarme")
         }
 
+        ClienteDTO cliente = clienteClient.getClientePorKeycloakId(token);
+
+        // RF 1.1: Creación del contenedor
         Contenedor contenedor = new Contenedor();
         contenedor.setPeso(request.pesoContenedor());
         contenedor.setVolumen(request.volumenContenedor());
-        contenedor.setClienteId(request.clienteDNI()); 
+        contenedor.setClienteId(cliente.getDNI()); // <-- Usamos el DNI del perfil
         contenedor.setEstado("PENDIENTE_RETIRO");
 
         Solicitud solicitud = new Solicitud();
@@ -81,10 +87,12 @@ public class SolicitudService {
         if (camionesAptos.length == 0) {
             throw new RuntimeException("No hay camiones disponibles para las características de este contenedor.");
         }
+
+		Map<String, Double> tarifaMap = getTarifaMap(token);
         
         // RF 112: Calcular tarifa aproximada en base a camiones elegibles
         solicitud.setCostoEstimado(
-            calcularCostoEstimado(camionesAptos, rutaDirecta.getDistance())
+            calcularCostoEstimado(camionesAptos, rutaDirecta.getDistance(), tarifaMap)
         );
         solicitud.setTiempoEstimado(rutaDirecta.getDuration() / 3600.0); // En horas
         solicitud.setEstado("BORRADOR");
@@ -92,7 +100,7 @@ public class SolicitudService {
         return persistenciaSolicitud.save(solicitud);
     }
 
-	private Double calcularCostoEstimado(CamionDTO[] camionesAptos, Double distanciaMetros) {
+	private Double calcularCostoEstimado(CamionDTO[] camionesAptos, Double distanciaMetros, Map<String, Double> tarifaMap) {
         if (camionesAptos.length == 0) return 0.0;
 
         // "valores promedio entre los camiones elegibles" [cite: 114]
@@ -108,9 +116,10 @@ public class SolicitudService {
         
         // "Cargos de Gestión... + costo por kilómetro... + costo de combustible..." [cite: 112]
         // (Asumimos que el estimado no tiene estadía en depósito)
-        double costoGestion = CARGO_GESTION_TRAMO_SIMPLE;
+        double costoGestion = tarifaMap.get("CARGO_GESTION_TRAMO_SIMPLE");
+        double costoCombustible = (distanciaKm * avgConsumoKm) * tarifaMap.get("PRECIO_LITRO_COMBUSTIBLE");
+        
         double costoTraslado = distanciaKm * avgCostoKm;
-        double costoCombustible = (distanciaKm * avgConsumoKm) * PRECIO_LITRO_COMBUSTIBLE;
         
         return costoGestion + costoTraslado + costoCombustible;
     }
@@ -210,6 +219,25 @@ public class SolicitudService {
         }
         // --- FIN VALIDACIÓN ---
 
+		LocalDateTime proximaFechaInicio = LocalDateTime.now().plusHours(24);
+
+        for (Tramo tramo : ruta.getTramos()) {
+            if (tramo.getDuracionEstimadaSegundos() == null || tramo.getDuracionEstimadaSegundos() <= 0) {
+                throw new IllegalArgumentException("El tramo (ID: " + tramo.getId() + ") no tiene una duración estimada válida.");
+            }
+
+            // 1. Seteamos la fecha de inicio
+            tramo.setFechaHoraInicioEstimada(proximaFechaInicio);
+
+            // 2. Calculamos y seteamos la fecha de fin
+            LocalDateTime fechaFin = proximaFechaInicio.plusSeconds(tramo.getDuracionEstimadaSegundos());
+            tramo.setFechaHoraFinEstimada(fechaFin);
+
+            // 3. Preparamos la fecha de inicio del *siguiente* tramo
+            // (Asumimos 8 horas de espera/gestión en el depósito)
+            proximaFechaInicio = fechaFin.plusHours(HORAS_ESPERA_EN_DEPOSITO);
+        }
+
         solicitud.setRuta(ruta);
         solicitud.setEstado("PROGRAMADA"); // La solicitud pasa a estar programada
         return persistenciaSolicitud.save(solicitud);
@@ -220,14 +248,25 @@ public class SolicitudService {
      */
     public Tramo asignarCamionATramo(Long solicitudId, Long tramoId, Long camionId, String token) {
         Solicitud solicitud = findSolicitudById(solicitudId);
+		Contenedor contenedor = solicitud.getContenedor(); // <-- Obtenemos el contenedor
         Tramo tramo = solicitud.getRuta().getTramos().stream()
             .filter(t -> t.getId().equals(tramoId))
             .findFirst()
             .orElseThrow(() -> new NoSuchElementException("Tramo no encontrado"));
             
-        // Validar que el camión sea apto (RF 11)
-        // (Se omite por brevedad, se debería llamar a camionClient.obtenerCamionPorId(camionId) 
-        // y comparar con solicitud.getContenedor().getPeso/Volumen)
+        // Validar que el camión sea apto [cite: 69, 112]
+        CamionDTO camion = camionClient.obtenerCamionPorId(camionId, token);
+        if (camion == null) {
+            throw new NoSuchElementException("Camión no encontrado con ID: " + camionId);
+        }
+
+        // Asumimos que contenedor.getPeso() y camion.costoTrasladoPorKm() están en Tns
+        // y que contenedor.getVolumen() y camion.volumenM3() están en m3
+        if (camion.costoTrasladoPorKm() < contenedor.getPeso() || 
+            camion.volumenM3() < contenedor.getVolumen()) {
+            
+            throw new IllegalArgumentException("Validación fallida: El camión (ID: " + camionId + ") no es apto para el peso/volumen del contenedor.");
+        }
             
         tramo.setCamionId(camionId);
         tramo.setEstado("ASIGNADO");
@@ -249,8 +288,15 @@ public class SolicitudService {
             .findFirst()
             .orElseThrow(() -> new NoSuchElementException("Tramo no encontrado"));
         
-        // Aquí iría la lógica de negocio para validar que el 'transportistaKeycloakId'
-        // corresponde al 'camionId' asignado al tramo.
+        List<CamionDTO> misCamiones = camionClient.obtenerMisCamiones(token);
+        
+        boolean esMiCamion = misCamiones.stream()
+            .map(camion -> (Long) ((Number) camion.id()).longValue())
+            .anyMatch(idCamion -> idCamion.equals(tramo.getCamionId()));
+
+        if (!esMiCamion) {
+            throw new AccessDeniedException("Acceso denegado: El tramo no está asignado a este transportista.");
+        }
 
         switch (estado.toUpperCase()) {
             case "INICIAR":
@@ -272,7 +318,8 @@ public class SolicitudService {
                     solicitud.setEstado("ENTREGADA");
                     solicitud.getContenedor().setEstado("ENTREGADO");
                     // RF 9: Calcular costos y tiempos reales [cite: 63]
-                    calcularCostosYTiemposReales(solicitud, token);
+                    Map<String, Double> tarifaMap = getTarifaMap(token);
+                    calcularCostosYTiemposReales(solicitud, token, tarifaMap);
                 } else {
                     solicitud.getContenedor().setEstado("EN_DEPOSITO");
                 }
@@ -302,7 +349,7 @@ public class SolicitudService {
         return ruta.getTramos().get(ruta.getTramos().size() - 1).getId().equals(tramoActual.getId());
     }
 
-    private void calcularCostosYTiemposReales(Solicitud solicitud, String token) {
+    private void calcularCostosYTiemposReales(Solicitud solicitud, String token, Map<String, Double> tarifaMap) {
         
         double costoTotal = 0.0;
         long tiempoTotalSegundos = 0;
@@ -312,20 +359,24 @@ public class SolicitudService {
         
         LocalDateTime fechaLlegadaAnterior = null;
 
+		final Double PRECIO_COMBUSTIBLE = tarifaMap.get("PRECIO_LITRO_COMBUSTIBLE");
+        final Double CARGO_GESTION = tarifaMap.get("CARGO_GESTION_TRAMO_SIMPLE");
+        final Double COSTO_ESTADIA = tarifaMap.get("COSTO_ESTADIA_DEPOSITO_DIA");
+
         for (Tramo tramo : solicitud.getRuta().getTramos()) {
             if (tramo.getEstado().equals("FINALIZADO")) {
                 CamionDTO camion = camionClient.obtenerCamionPorId(tramo.getCamionId(), token);
                 double distanciaKm = tramo.getDistanciaMetros() / 1000.0;
                 
                 // 2. Sumar costos del tramo
-                costoTotal += CARGO_GESTION_TRAMO_SIMPLE; // Cargo de gestión por tramo [cite: 112]
-                costoTotal += distanciaKm * camion.costoTrasladoPorKm(); // Costo por km [cite: 112]
-                costoTotal += (distanciaKm * camion.consumoCombustibleKm()) * PRECIO_LITRO_COMBUSTIBLE; 
+                costoTotal += CARGO_GESTION;
+                costoTotal += distanciaKm * camion.costoTrasladoPorKm();
+                costoTotal += (distanciaKm * camion.consumoCombustibleKm()) * PRECIO_COMBUSTIBLE;
                 
                 if (fechaLlegadaAnterior != null) {
                     long diasEstadia = Duration.between(fechaLlegadaAnterior, tramo.getFechaHoraInicioReal()).toDays();
                     if (diasEstadia > 0) {
-                        costoTotal += diasEstadia * COSTO_ESTADIA_DEPOSITO_DIA;
+                        costoTotal += diasEstadia * COSTO_ESTADIA;
                     }
                 }
                 
@@ -337,6 +388,23 @@ public class SolicitudService {
         
         solicitud.setCostoFinal(costoTotal);
         solicitud.setTiempoReal(tiempoTotalSegundos / 3600.0); // En horas
+    }
+
+	public List<Solicitud> getContenedoresPendientes() {
+        List<String> estadosPendientes = List.of(
+            "PENDIENTE_RETIRO", 
+            "EN_TRANSITO", 
+            "EN_DEPOSITO"
+        );
+        return persistenciaSolicitud.findByContenedorEstadoIn(estadosPendientes);
+    }
+
+	private Map<String, Double> getTarifaMap(String token) {
+        List<TarifaDTO> tarifas = tarifaClient.getTarifas(token);
+        
+        // Convierte la lista de DTOs en un Mapa<Clave, Valor>
+        return tarifas.stream()
+                .collect(Collectors.toMap(TarifaDTO::getClave, TarifaDTO::getValor));
     }
 
 	public Double getCostoEstimado(Long id) {
@@ -362,4 +430,36 @@ public class SolicitudService {
         }
         return s.getTiempoReal();
     }
+
+	public List<Solicitud> getContenedoresPendientes(String estado) {
+        // Si el estado es nulo, la query traerá todos los pendientes.
+        // Si se provee un estado (ej. "EN_TRANSITO"), filtrará por ese.
+        return persistenciaSolicitud.findContenedoresPendientesConFiltros(estado);
+    }
+
+	public List<Tramo> obtenerMisTramosAsignados(String token) {
+        
+        // 1. Llamar a servicio-camiones para saber qué camiones maneja este transportista
+        List<CamionDTO> misCamiones = camionClient.obtenerMisCamiones(token);
+        
+        if (misCamiones == null || misCamiones.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. Extraer los IDs de esos camiones
+        List<Long> misCamionIds = misCamiones.stream()
+            .map(camion -> (Long) ((Number) camion.id()).longValue()) 
+            .collect(Collectors.toList());
+
+        // 3. Definir estados relevantes
+        List<String> estadosRelevantes = List.of("ASIGNADO", "INICIADO");
+        
+        // 4. Buscar en TODAS las solicitudes y filtrar los tramos (SIN TramoRepository)
+        return persistenciaSolicitud.findAll().stream() // Carga todas las solicitudes
+            .filter(solicitud -> solicitud.getRuta() != null && solicitud.getRuta().getTramos() != null) // Filtra solicitudes con ruta y tramos
+            .flatMap(solicitud -> solicitud.getRuta().getTramos().stream()) // Obtiene un stream de todos los tramos
+            .filter(tramo -> misCamionIds.contains(tramo.getCamionId())) // Filtra por ID de camión
+            .filter(tramo -> estadosRelevantes.contains(tramo.getEstado())) // Filtra por estado
+            .collect(Collectors.toList());
+	}
 }

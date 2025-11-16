@@ -1,5 +1,6 @@
 package ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,4 +18,6 @@ public class Chofer {
 	
 	private String nombre;
 	private String licencia;
+	@Column(unique = true, nullable = true) // Puede ser nulo si no está asignado
+	private String idUsuarioKeyCloak;
 }

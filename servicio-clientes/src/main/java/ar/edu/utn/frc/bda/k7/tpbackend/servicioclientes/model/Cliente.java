@@ -18,4 +18,5 @@ public class Cliente {
     private String apellido;
     private Integer telefono;
     private String email;
+	private String idUsuarioKeyCloak;
 }

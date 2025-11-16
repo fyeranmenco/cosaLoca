@@ -1,9 +1,9 @@
 server:
-  port: 8082
+  port: 8085
 
 spring:
   datasource:
-    url: jdbc:h2:file:/opt/h2-data/solicitudes-db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:file:/opt/h2-data/tarifas-db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password: password
@@ -29,16 +29,4 @@ spring:
             issuer-uri: http://localhost:8181/realms/tpbackend
 springdoc:
   swagger-ui:
-    config-url: /api/clientes/v3/api-docs/swagger-config
-service:
-  cliente:
-    url: http://clientes:8081/api/clientes
-  deposito:
-    url: http://depositos:8083/api/depositos
-  camion:
-    url: http://camiones:8084/api/camiones
-  tarifas:
-    url: http://tarifas:8085/api/tarifas
-  osrm:
-    url: http://osrm:5000
-  
+    config-url: /api/tarifas/v3/api-docs/swagger-config

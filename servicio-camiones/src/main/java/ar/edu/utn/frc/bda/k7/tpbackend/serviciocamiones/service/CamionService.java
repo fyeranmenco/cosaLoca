@@ -7,6 +7,7 @@ import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.model.Camion;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.repository.PersistenciaCamion;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -42,5 +43,17 @@ public class CamionService {
                 .orElseThrow(() -> new RuntimeException("Camión no encontrado"));
         camion.setDisponible(disponible);
         return persistenciaCamion.save(camion);
+    }
+
+	public Camion asignarTransportista(Long camionId, String keycloakId) {
+        Camion camion = persistenciaCamion.findById(camionId)
+                .orElseThrow(() -> new NoSuchElementException("Camión no encontrado"));
+        
+        camion.getChofer().setIdUsuarioKeyCloak(keycloakId);
+        return persistenciaCamion.save(camion);
+    }
+
+    public List<Camion> obtenerMisCamiones(String keycloakId) {
+        return persistenciaCamion.findByKeycloakId(keycloakId);
     }
 }

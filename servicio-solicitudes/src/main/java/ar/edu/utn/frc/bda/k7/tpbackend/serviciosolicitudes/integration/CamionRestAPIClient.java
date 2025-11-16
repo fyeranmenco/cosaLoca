@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 // import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -53,5 +54,16 @@ public class CamionRestAPIClient {
                 .retrieve()
                 .toBodilessEntity()
                 .block();
+    }
+
+	@SuppressWarnings("unchecked")
+	public List<CamionDTO> obtenerMisCamiones(String token) {
+        return webClient.get()
+                .uri("/mis-camiones")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(List.class) // Obtiene la lista genérica
+                .block(); 
     }
 }

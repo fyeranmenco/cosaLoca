@@ -2,6 +2,7 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.controller;
 
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.api.ICamionRestAPI;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.model.Camion;
+import org.springframework.security.oauth2.jwt.Jwt; // <-- Importar
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.service.CamionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,5 +55,21 @@ public class CamionController implements ICamionRestAPI {
     @PreAuthorize("isAuthenticated()") // Solo accesible internamente o por un admin
     public ResponseEntity<Camion> actualizarDisponibilidad(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
         return ResponseEntity.ok(camionService.actualizarDisponibilidad(id, body.get("disponible")));
+    }
+
+	@PatchMapping("/{id}/asignar-transportista")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Camion> asignarTransportista(
+            @PathVariable Long id, 
+            @RequestBody Map<String, String> body) {
+        String keycloakId = body.get("keycloakId");
+        return ResponseEntity.ok(camionService.asignarTransportista(id, keycloakId));
+    }
+
+    @GetMapping("/mis-camiones")
+    @PreAuthorize("hasRole('TRANSPORTISTA')")
+    public ResponseEntity<List<Camion>> getMisCamiones(@AuthenticationPrincipal Jwt principal) {
+        String keycloakId = principal.getClaimAsString("sub");
+        return ResponseEntity.ok(camionService.obtenerMisCamiones(keycloakId));
     }
 }
