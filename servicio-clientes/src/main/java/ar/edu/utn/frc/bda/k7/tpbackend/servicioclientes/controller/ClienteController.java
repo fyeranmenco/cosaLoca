@@ -17,12 +17,13 @@ import ar.edu.utn.frc.bda.k7.tpbackend.servicioclientes.api.IClienteRestAPI;
 import ar.edu.utn.frc.bda.k7.tpbackend.servicioclientes.model.Cliente;
 import ar.edu.utn.frc.bda.k7.tpbackend.servicioclientes.service.ClienteService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor
+@Slf4j
 public class ClienteController implements IClienteRestAPI {
-
     private final ClienteService clienteService;
 
     @Override
@@ -36,8 +37,14 @@ public class ClienteController implements IClienteRestAPI {
     @Override
     @GetMapping
     public ResponseEntity<List<Cliente>> obtenerTodosLosClientes() {
-        List<Cliente> clientes = clienteService.obtenerTodos();
-        return ResponseEntity.ok(clientes);
+		try {
+			log.info("Se accedio al endpoint para obtener todos los clientes");
+			List<Cliente> clientes = clienteService.obtenerTodos();
+			return ResponseEntity.ok(clientes);
+		} catch (Exception e) {
+			log.error("Error al obtener la lista de clientes", e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		} 
     }
 
 

@@ -21,7 +21,6 @@ public class Ruta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Una ruta tiene muchos tramos [cite: 86]
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "ruta_id")
     private List<Tramo> tramos;

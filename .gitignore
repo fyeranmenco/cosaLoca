@@ -64,3 +64,36 @@ Thumbs.db
 # ========================
 # Wrapper JAR generado localmente
 /.mvn/wrapper/maven-wrapper.jar
+
+osrm_data/
+
+!osrm_data/.gitkeep
+
+osrm-data/argentina-251115.osm.pbf
+osrm-data/argentina-251115.osrm
+osrm-data/argentina-251115.osrm.cell_metrics
+osrm-data/argentina-251115.osrm.cells
+osrm-data/argentina-251115.osrm.cnbg
+osrm-data/argentina-251115.osrm.cnbg_to_ebg
+osrm-data/argentina-251115.osrm.datasource_names
+osrm-data/argentina-251115.osrm.ebg
+osrm-data/argentina-251115.osrm.ebg_nodes
+osrm-data/argentina-251115.osrm.edges
+osrm-data/argentina-251115.osrm.enw
+osrm-data/argentina-251115.osrm.fileIndex
+osrm-data/argentina-251115.osrm.geometry
+osrm-data/argentina-251115.osrm.icd
+osrm-data/argentina-251115.osrm.maneuver_overrides
+osrm-data/argentina-251115.osrm.mldgr
+osrm-data/argentina-251115.osrm.names
+osrm-data/argentina-251115.osrm.nbg_nodes
+osrm-data/argentina-251115.osrm.partition
+osrm-data/argentina-251115.osrm.properties
+osrm-data/argentina-251115.osrm.ramIndex
+osrm-data/argentina-251115.osrm.restrictions
+osrm-data/argentina-251115.osrm.timestamp
+osrm-data/argentina-251115.osrm.tld
+osrm-data/argentina-251115.osrm.tls
+osrm-data/argentina-251115.osrm.turn_duration_penalties
+osrm-data/argentina-251115.osrm.turn_penalties_index
+osrm-data/argentina-251115.osrm.turn_weight_penalties

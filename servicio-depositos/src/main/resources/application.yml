@@ -18,7 +18,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwt-set-uri: http://keycloak:8182/realms/tpbackend/protocol/openid-connect/certs
+          jwt-set-uri: http://keycloak:8181/realms/tpbackend/protocol/openid-connect/certs
       client:
         registration:
           keycloak:
@@ -26,7 +26,15 @@ spring:
             authorization-grant-type: authorization_code
         provider:
           keycloak:
-            issuer-uri: http://localhost:8182/realms/tpbackend
+            issuer-uri: http://localhost:8181/realms/tpbackend
 springdoc:
   swagger-ui:
     config-url: /api/depositos/v3/api-docs/swagger-config
+
+service:
+  osrm:
+    url: http://osrm:5000
+  central:
+    latitud: -31.475552
+    longitud: -64.118634 
+    

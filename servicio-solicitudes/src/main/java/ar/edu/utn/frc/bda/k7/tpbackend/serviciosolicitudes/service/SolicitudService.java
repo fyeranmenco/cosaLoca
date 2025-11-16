@@ -28,10 +28,10 @@ public class SolicitudService {
     /**
      * RF 1: Registrar una nueva solicitud de transporte. (Cliente) [cite: 47]
      */
-    public Solicitud crearSolicitud(SolicitudRequestDTO request, String clienteKeycloakId) {
+    public Solicitud crearSolicitud(SolicitudRequestDTO request, String token) {
         
         // RF 1.2: Validar que el cliente existe [cite: 49]
-        if (!clienteClient.existeCliente(request.clienteDNI(), clienteKeycloakId)) {
+        if (!clienteClient.existeCliente(request.clienteDNI(), token)) {
              throw new RuntimeException("El Cliente con DNI " + request.clienteDNI() + " no existe.");
         }
 
@@ -60,7 +60,7 @@ public class SolicitudService {
         // );
         
         CamionDTO[] camionesAptos = camionClient.obtenerCamionesDisponibles(
-            contenedor.getPeso(), contenedor.getVolumen()
+            contenedor.getPeso(), contenedor.getVolumen(), token
         );
 
         if (camionesAptos.length == 0) {

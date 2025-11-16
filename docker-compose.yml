@@ -19,37 +19,38 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
-    command: start-dev --http-port=8182
+    command: start-dev --http-port=8181
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_HOSTNAME: localhost 
-      KC_HOSTNAME_PORT: 8182
-      KEYCLOAK_FRONTEND_URL: http://localhost:8182
+      KC_HOSTNAME_URL: http://localhost:8181
+      KC_HOSTNAME_PORT: 8181
+      KEYCLOAK_FRONTEND_URL: http://localhost:8181
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloakpassword
       KC_HOSTNAME_STRICT_HTTPS: "false"
-      KC_HTTP_PORT: 8182   
+      KC_HTTP_PORT: 8181
     ports:
-      - "8182:8182"   
+      - "8181:8181"
     networks:
       - tp-network
     depends_on:
       keycloak-db:
         condition: service_healthy
-  nginx-proxy:
-    image: nginx:alpine
-    container_name: nginx-proxy
+
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: osrm
     ports:
-      - "8181:8181"   # expone localhost:8181 hacia afuera
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - "5000:5000"
     networks:
       - tp-network
-    depends_on:
-      - keycloak
+    volumes:
+      - ./osrm-data:/data   
+    command: osrm-routed --algorithm mld /data/argentina-latest.osrm
 
   api-gateway:
     build: { context: ./api-gateway, dockerfile: Dockerfile }
@@ -63,11 +64,17 @@ services:
       - camiones
       - depositos
     environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8182/realms/tpbackend/protocol/openid-connect/certs
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8182/realms/tpbackend
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8181/realms/tpbackend/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8181/realms/tpbackend
     networks:
       - tp-network
-
+    develop:
+      watch:
+        - path: ./api-gateway/target/app.jar
+          target: /application/app.jar
+          action: sync
+        - path: ./api-gateway/Dockerfile
+          action: rebuild
   clientes:
     build: { context: ./servicio-clientes, dockerfile: Dockerfile }
     container_name: clientes
@@ -80,31 +87,42 @@ services:
     extra_hosts:
       - "localhost:host-gateway"
     environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8182/realms/tpbackend/protocol/openid-connect/certs
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8182/realms/tpbackend
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8181/realms/tpbackend/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8181/realms/tpbackend
     networks:
       - tp-network
-
+    develop:
+      watch:
+        - path: ./servicio-clientes/target/app.jar
+          target: /application/app.jar
+          action: sync
+        - path: ./servicio-clientes/Dockerfile
+          action: rebuild
   solicitudes:
     build: { context: ./servicio-solicitudes, dockerfile: Dockerfile }
     container_name: solicitudes
     ports: 
       - "8082:8082"
-
     depends_on: 
       - keycloak
       - clientes
       - depositos
       - camiones
-
+      - osrm
     volumes:
       - solicitudes-data:/opt/h2-data
-
     environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8182/realms/tpbackend/protocol/openid-connect/certs
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8182/realms/tpbackend
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8181/realms/tpbackend/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8181/realms/tpbackend
     networks:
       - tp-network
+    develop:
+      watch:
+        - path: ./servicio-solicitudes/target/app.jar
+          target: /application/app.jar
+          action: sync
+        - path: ./servicio-solicitudes/Dockerfile
+          action: rebuild
 
   depositos:
     build: { context: ./servicio-depositos, dockerfile: Dockerfile }
@@ -116,11 +134,17 @@ services:
     volumes:
       - depositos-data:/opt/h2-data
     environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8182/realms/tpbackend/protocol/openid-connect/certs
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8182/realms/tpbackend
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8181/realms/tpbackend/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8181/realms/tpbackend
     networks:
       - tp-network
-
+    develop:
+      watch:
+        - path: ./servicio-depositos/target/app.jar
+          target: /application/app.jar
+          action: sync
+        - path: ./servicio-depositos/Dockerfile
+          action: rebuild
   camiones:
     build: { context: ./servicio-camiones, dockerfile: Dockerfile }
     container_name: camiones
@@ -131,10 +155,18 @@ services:
     volumes:
       - camiones-data:/opt/h2-data
     environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8182/realms/tpbackend/protocol/openid-connect/certs
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8182/realms/tpbackend
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8181/realms/tpbackend/protocol/openid-connect/certs
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8181/realms/tpbackend
     networks:
       - tp-network
+    develop:
+      watch:
+        - path: ./servicio-camiones/target/app.jar
+          target: /application/app.jar
+          action: sync
+        - path: ./servicio-camiones/Dockerfile
+          action: rebuild
+         
 
 networks:
   tp-network:

@@ -1,6 +1,7 @@
 package ar.edu.utn.frc.bda.k7.tpbackend.serviciodepositos.controller;
 
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciodepositos.model.Deposito;
+import ar.edu.utn.frc.bda.k7.tpbackend.serviciodepositos.model.dtos.*;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciodepositos.service.DepositoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ public class DepositoController {
     
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Deposito> crearDeposito(@RequestBody Deposito deposito) {
+    public ResponseEntity<Deposito> crearDeposito(@RequestBody CrearDepositoDTO deposito) {
         Deposito nuevoDeposito = depositoService.crearDeposito(deposito);
         return new ResponseEntity<>(nuevoDeposito, HttpStatus.CREATED);
     }

@@ -1,6 +1,8 @@
 package ar.edu.utn.frc.bda.k7.tpbackend.servicioclientes.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import ar.edu.utn.frc.bda.k7.tpbackend.servicioclientes.model.Cliente;
@@ -11,8 +13,8 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor 
+@Slf4j
 public class ClienteService {
-
     private final PersistenciaCliente persistenciaCliente;
 
     public Cliente guardarCliente(Cliente cliente) {
@@ -24,6 +26,7 @@ public class ClienteService {
     }
     
     public List<Cliente> obtenerTodos() {
+		log.info("ClientesService: Obteniendo todos los clientes desde la base de datos");
         return persistenciaCliente.findAll();
     }
     

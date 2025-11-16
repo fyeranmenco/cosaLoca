@@ -16,7 +16,7 @@
   <dependencies>
 	<dependency>
 	  <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <artifactId>spring-boot-starter-webflux</artifactId>
 	</dependency>
 	<dependency>
       <groupId>org.springframework.boot</groupId>
@@ -26,6 +26,12 @@
 	  <groupId>com.h2database</groupId>
 	  <artifactId>h2</artifactId>
 	  <scope>runtime</scope>
+	</dependency>
+	<dependency>
+	  <groupId>org.springframework.boot</groupId>
+	  <artifactId>spring-boot-devtools</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
 	</dependency>
 	<dependency>
       <groupId>org.projectlombok</groupId>
@@ -48,10 +54,14 @@
   </dependencies>
 
   <build>
+	<finalName>app</finalName>
 	<plugins>
 	  <plugin>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-maven-plugin</artifactId>
+		<configuration>
+			<mainClass>ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.ServicioSolicitudesApplication</mainClass>
+		</configuration>
 	  </plugin>
 	</plugins>
   </build>

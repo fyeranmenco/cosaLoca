@@ -6,12 +6,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.web.client.RestTemplate;
 
+import lombok.extern.slf4j.Slf4j;
+
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.repository")
-public class ServicioSolicitudApplication {
+@Slf4j
+public class ServicioSolicitudesApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ServicioSolicitudApplication.class, args);
+		log.info("Iniciando Servicio de Solicitudes...");
+        SpringApplication.run(ServicioSolicitudesApplication.class, args);
     }
     
     @Bean

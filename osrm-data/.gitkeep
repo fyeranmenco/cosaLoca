@@ -1,0 +1,16 @@
+"C:/Users/elkak/Desktop/Carpetas/Programas/git/facu/tpBackend/osrm-data:/data" 
+
+Para cargar los mapas usar estos comandos:
+
+docker run -t -v "<ruta-absoluta-del-proyecto>/osrm-data:/data" osrm/osrm-backend osrm-extract -p /opt/car.lua /data/argentina-251115.osm.pbf
+docker-compose run --rm osrm-backend osrm-extract -p /opt/car.lua /data/argentina-251115.osm.pbf
+
+docker run -t -v "<ruta-absoluta-del-proyecto>/osrm-data:/data" osrm/osrm-backend osrm-partition /data/argentina-251115.osm.pbf
+docker-compose run --rm osrm-backend osrm-partition /data/argentina-251115.osm.pbf
+
+docker run -t -v "<ruta-absoluta-del-proyecto>/osrm-data:/data" osrm/osrm-backend osrm-customize /data/argentina-251115.osm.pbf
+docker-compose run --rm osrm-backend osrm-customize /data/argentina-251115.osm.pbf
+
+Ejemplo de uso:
+
+docker run -t -i -p 5000:5000 -v "<ruta-absoluta-del-proyecto>/osrm-data:/data" osrm/osrm-backend osrm-routed --algorithm mld /data/argentina-251115.osm.pbf

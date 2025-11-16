@@ -33,13 +33,16 @@
   </dependencies>
 
   <build>
+	<finalName>app</finalName>
 	<plugins>
 	  <plugin>
 		  <groupId>org.springframework.boot</groupId>
 		  <artifactId>spring-boot-maven-plugin</artifactId>
+		  <configuration>
+			  <mainClass>ar.edu.utn.frc.bda.k7.tpbackend.apigateway.ApiGatewayApplication</mainClass>
+		  </configuration>
 	  </plugin>
 
 	</plugins>
   </build>
 </project>
-

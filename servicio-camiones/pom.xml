@@ -28,6 +28,12 @@
 	  <scope>runtime</scope>
 	</dependency>
 	<dependency>
+	  <groupId>org.springframework.boot</groupId>
+	  <artifactId>spring-boot-devtools</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
+	</dependency>
+	<dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional> 
@@ -48,10 +54,14 @@
   </dependencies>
 
   <build>
+	<finalName>app</finalName>
 	<plugins>
 	  <plugin>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-maven-plugin</artifactId>
+		<configuration>
+			<mainClass>ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.ServicioCamionesApplication</mainClass>
+		</configuration>
 	  </plugin>
 	</plugins>
   </build>

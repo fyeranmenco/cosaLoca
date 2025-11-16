@@ -27,13 +27,13 @@ public class SwaggerUiConfigurer {
         System.out.println("\n\n\n>>> SwaggerUiConfigurer.init() ejecutándose con SwaggerUiConfigProperties\n\n\n");
 
         // 1) Forzar configUrl (ruta relativa vía gateway)
-        props.setConfigUrl("/api/clientes/v3/api-docs/swagger-config");
+        props.setConfigUrl("http://localhost:8080/api/clientes/v3/api-docs/swagger-config");
 
         // 2) Registrar la spec pública usando SwaggerUrl
         SwaggerUrl clientesSpec = new SwaggerUrl(
                 "clientes",                                // nombre visible
-                "/api/clientes/v3/api-docs",               // URL de la spec
-                "/api/clientes/v3/api-docs/swagger-config" // URL del swagger-config
+                "http://localhost:8080/api/clientes/v3/api-docs",               // URL de la spec
+                "http://localhost:8080/api/clientes/v3/api-docs/swagger-config" // URL del swagger-config
         );
         props.setUrls(Set.of(clientesSpec));
 

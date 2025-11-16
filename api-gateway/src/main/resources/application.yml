@@ -6,10 +6,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwt-set-uri: http://localhost:8182/realms/tpbackend/protocol/openid-connect/certs
+          jwt-set-uri: http://localhost:8181/realms/tpbackend/protocol/openid-connect/certs
       provider:
           keycloak:
-            issuer-uri: http://localhost:8182/realms/tpbackend
+            issuer-uri: http://localhost:8181/realms/tpbackend
 
   cloud:
     gateway:
@@ -19,7 +19,7 @@ spring:
         # 1. RUTA CRÍTICA DE AUTENTICACIÓN (KEYCLOAK)
         # ====================================================
         - id: keycloak_auth
-          uri: http://keycloak:8182 # <-- URL directa (ya estaba así)
+          uri: http://keycloak:8181 # <-- URL directa (ya estaba así)
           predicates:
             - Path=/realms/tpbackend/**
         

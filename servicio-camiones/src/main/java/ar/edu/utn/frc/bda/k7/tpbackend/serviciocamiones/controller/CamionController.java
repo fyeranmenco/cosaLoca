@@ -4,6 +4,8 @@ import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.api.ICamionRestAPI;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.model.Camion;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.service.CamionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/camiones")
 @RequiredArgsConstructor
+@Slf4j
 public class CamionController implements ICamionRestAPI {
 
     private final CamionService camionService;
@@ -30,6 +33,7 @@ public class CamionController implements ICamionRestAPI {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Camion> obtenerCamionPorId(@PathVariable Long id) {
+		log.info("Buscando camion con id: {}", id);
         return camionService.obtenerCamionPorId(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build()); 

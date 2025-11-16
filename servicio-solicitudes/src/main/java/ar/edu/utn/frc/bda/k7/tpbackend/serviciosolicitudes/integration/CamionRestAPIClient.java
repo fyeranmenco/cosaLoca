@@ -2,39 +2,44 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.integration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.MediaType;
+// import reactor.core.publisher.Mono;
+
 import java.util.Map;
 
-// DTO para recibir la info del camión
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.DTOs.CamionDTO;
 
 @Component
 public class CamionRestAPIClient {
 
-    private final RestTemplate restTemplate;
-
-    @Value("${service.camion.url}")
-    private String camionServiceUrl;
-
-    public CamionRestAPIClient(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
-
-    // Llama al servicio de camiones para validar la capacidad [cite: 65]
-    public CamionDTO[] obtenerCamionesDisponibles(Double peso, Double volumen) {
-        String url = UriComponentsBuilder.fromHttpUrl(camionServiceUrl)
-                .path("/disponibles/aptos")
-                .queryParam("peso", peso)
-                .queryParam("volumen", volumen)
-                .toUriString();
-
-        return restTemplate.getForObject(url, CamionDTO[].class);
-    }
+    private final WebClient webClient;
     
-    // Marca un camión como no disponible
+	public CamionRestAPIClient(@Value("${service.camion.url}") String camionServiceUrl) {
+        this.webClient = WebClient.builder().baseUrl(camionServiceUrl).build();
+    }
+
+    public CamionDTO[] obtenerCamionesDisponibles(Double peso, Double volumen, String token) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/disponibles/aptos")
+                        .queryParam("peso", peso)
+                        .queryParam("volumen", volumen)
+                        .build())
+                .headers(headers -> headers.setBearerAuth(token))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(CamionDTO[].class)
+                .block(); 
+    }
+
     public void actualizarDisponibilidad(Long camionId, boolean disponible) {
-        String url = camionServiceUrl + "/" + camionId + "/disponibilidad";
-        restTemplate.put(url, Map.of("disponible", disponible));
+        webClient.put()
+                .uri("/{id}/disponibilidad", camionId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("disponible", disponible))
+                .retrieve()
+                .toBodilessEntity()
+                .block();
     }
 }
