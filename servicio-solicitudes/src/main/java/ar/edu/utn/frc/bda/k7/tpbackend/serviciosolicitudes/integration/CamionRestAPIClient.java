@@ -3,12 +3,14 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.integration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.dtos.CamionDTO;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 // import reactor.core.publisher.Mono;
 
 import java.util.Map;
-
-import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.DTOs.CamionDTO;
 
 @Component
 public class CamionRestAPIClient {
@@ -33,7 +35,17 @@ public class CamionRestAPIClient {
                 .block(); 
     }
 
-    public void actualizarDisponibilidad(Long camionId, boolean disponible) {
+	public CamionDTO obtenerCamionPorId(Long camionId, String token) {
+        return webClient.get()
+                .uri("/{id}", camionId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(CamionDTO.class)
+                .block(); // Asumimos que el admin/transportista tiene permiso
+    }
+
+    public void actualizarDisponibilidad(Long camionId, boolean disponible, String token) {
         webClient.put()
                 .uri("/{id}/disponibilidad", camionId)
                 .contentType(MediaType.APPLICATION_JSON)

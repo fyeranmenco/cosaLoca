@@ -32,4 +32,8 @@ public class Tramo {
     
     private LocalDateTime fechaHoraInicioReal;
     private LocalDateTime fechaHoraFinReal;
+
+	// --- NUEVOS CAMPOS ---
+    private Double distanciaMetros;
+    private Long duracionEstimadaSegundos;
 }

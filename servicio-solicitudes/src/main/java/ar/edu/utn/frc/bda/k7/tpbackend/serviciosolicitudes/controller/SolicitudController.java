@@ -3,11 +3,16 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.controller;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.Ruta;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.Solicitud;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.Tramo;
-import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.DTOs.SolicitudRequestDTO;
+import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.dtos.SolicitudRequestDTO;
+import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.model.dtos.TramoSugeridoDTO;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciosolicitudes.service.SolicitudService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,9 +30,26 @@ public class SolicitudController {
     @PostMapping
     @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
     public ResponseEntity<Solicitud> crearSolicitud(@RequestBody SolicitudRequestDTO request, @AuthenticationPrincipal Jwt principal) {
-        // Obtenemos el ID de Keycloak del Cliente
-        String clienteKeycloakId = principal.getTokenValue();
-        return ResponseEntity.ok(solicitudService.crearSolicitud(request, clienteKeycloakId));
+        String token = principal.getTokenValue();
+        return ResponseEntity.ok(solicitudService.crearSolicitud(request, token));
+    }
+
+	@GetMapping("/tramos/sugeridos")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<TramoSugeridoDTO>> obtenerTramosSugeridos(
+            @RequestParam Long idDepositoOrigen,
+            @RequestParam Long idDepositoDestino,
+            @AuthenticationPrincipal Jwt principal) {
+        
+        String token = principal.getTokenValue();
+        List<TramoSugeridoDTO> sugerencias = solicitudService.obtenerTramosSugeridos(idDepositoOrigen, idDepositoDestino, token);
+        return ResponseEntity.ok(sugerencias);
+    }
+
+	@GetMapping("/borradores")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Solicitud>> getSolicitudesBorrador() {
+        return ResponseEntity.ok(solicitudService.obtenerSolicitudesBorrador());
     }
 
     @GetMapping("/{id}/estado")
@@ -36,7 +58,7 @@ public class SolicitudController {
         // TODO: Validar que el 'principal' (Cliente) sea el dueño de la solicitud 'id'
         return ResponseEntity.ok(solicitudService.consultarEstadoSolicitud(id));
     }
-    
+
     @PostMapping("/{id}/ruta")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Solicitud> asignarRuta(@PathVariable Long id, @RequestBody Ruta ruta) {
@@ -48,8 +70,9 @@ public class SolicitudController {
     public ResponseEntity<Tramo> asignarCamion(
             @PathVariable Long solicitudId, 
             @PathVariable Long tramoId, 
-            @RequestBody Long camionId) {
-        return ResponseEntity.ok(solicitudService.asignarCamionATramo(solicitudId, tramoId, camionId));
+            @RequestBody Long camionId,
+			@AuthenticationPrincipal Jwt principal) {
+        return ResponseEntity.ok(solicitudService.asignarCamionATramo(solicitudId, tramoId, camionId, principal.getTokenValue()));
     }
 
     @PatchMapping("/{solicitudId}/tramos/{tramoId}/estado")
@@ -60,6 +83,50 @@ public class SolicitudController {
             @RequestBody String estado, // "INICIAR" o "FINALIZAR"
             @AuthenticationPrincipal Jwt principal) {
         String transportistaKeycloakId = principal.getClaimAsString("sub");
-        return ResponseEntity.ok(solicitudService.actualizarEstadoTramo(solicitudId, tramoId, estado, transportistaKeycloakId));
+        return ResponseEntity.ok(solicitudService.actualizarEstadoTramo(solicitudId, tramoId, estado, transportistaKeycloakId, principal.getTokenValue()));
+    }
+
+	@GetMapping("/{id}/costo_estimado")
+    @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
+    public ResponseEntity<Double> getCostoEstimado(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(solicitudService.getCostoEstimado(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @GetMapping("/{id}/costo_real")
+    @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
+    public ResponseEntity<Double> getCostoReal(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(solicitudService.getCostoReal(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // O un DTO de error
+        }
+    }
+
+    @GetMapping("/{id}/tiempo_estimado") // 'image.png' dice /tiempo, pero estimad/real es más claro
+    @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
+    public ResponseEntity<Double> getTiempoEstimado(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(solicitudService.getTiempoEstimado(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @GetMapping("/{id}/tiempo_real")
+    @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
+    public ResponseEntity<Double> getTiempoReal(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(solicitudService.getTiempoReal(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); 
+        }
     }
 }
