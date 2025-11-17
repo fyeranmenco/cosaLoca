@@ -18,6 +18,6 @@ public class Chofer {
 	
 	private String nombre;
 	private String licencia;
-	@Column(unique = true, nullable = true) // Puede ser nulo si no está asignado
+	@Column(unique = true, nullable = true) 
 	private String idUsuarioKeyCloak;
 }

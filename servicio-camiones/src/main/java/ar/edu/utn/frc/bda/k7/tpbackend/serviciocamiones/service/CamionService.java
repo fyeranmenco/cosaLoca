@@ -18,7 +18,7 @@ public class CamionService {
     private final PersistenciaCamion persistenciaCamion;
 
     public Camion guardarCamion(Camion camion) {
-        camion.setDisponible(true); // Por defecto al crearlo
+        camion.setDisponible(true);
         return persistenciaCamion.save(camion);
     }
 
@@ -29,6 +29,10 @@ public class CamionService {
     public Optional<Camion> obtenerCamionPorId(Long id) {
         return persistenciaCamion.findById(id);
     }
+
+	public List<Camion> obtenerTodosLosCamiones() {
+		return persistenciaCamion.findAll();
+	}
     
     public List<Camion> obtenerCamionesDisponiblesAptos(Double peso, Double volumen) {
         return persistenciaCamion.findAll().stream()

@@ -41,4 +41,8 @@ service:
     url: http://tarifas:8085/api/tarifas
   osrm:
     url: http://osrm:5000
+  central:
+    latitud: -31.475552
+    longitud: -64.118634 
+    
   

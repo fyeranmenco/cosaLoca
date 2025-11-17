@@ -8,11 +8,11 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OsrmRoute {
     @JsonProperty("duration")
-    private double duration; // Duración en segundos
+    private double duration; 
 
     @JsonProperty("distance")
-    private double distance; // Distancia en metros
+    private double distance;  
 
     @JsonProperty("geometry")
-    private String geometry; // Polilínea codificada
+    private String geometry;  
 }

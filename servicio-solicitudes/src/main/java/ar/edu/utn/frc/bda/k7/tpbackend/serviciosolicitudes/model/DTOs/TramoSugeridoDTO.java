@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TramoSugeridoDTO {
-    private String duracionFormateada; // ej. "7h 30m"
+    private String duracionFormateada;
     private double distanciaKm;
-    private String geometria; // Para dibujar en el mapa
+    private String geometria;  
     private long duracionSegundos;
     private double distanciaMetros;
 }

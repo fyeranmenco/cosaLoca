@@ -72,8 +72,9 @@ public class ClienteController implements IClienteRestAPI {
 
 	@GetMapping("/existe/keycloak")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-	@PreAuthorize("isAuthenticated()") // Seguridad interna
+	@PreAuthorize("isAuthenticated()") 
     public ResponseEntity<Void> verificarExistenciaClientePorKeycloakId(@AuthenticationPrincipal Jwt principal) {
+		log.info("Verificando existencia de cliente por Keycloak ID");
         String keycloakId = principal.getClaimAsString("sub");
         if (clienteService.existeClientePorKeycloakId(keycloakId)) {
             return ResponseEntity.noContent().build(); 
@@ -90,13 +91,12 @@ public class ClienteController implements IClienteRestAPI {
     }
 
 	@GetMapping("/keycloak")
-	@PreAuthorize("isAuthenticated()") // Seguridad interna
+	@PreAuthorize("isAuthenticated()") 
     public ResponseEntity<Cliente> getClientePorKeycloakId(@AuthenticationPrincipal Jwt principal) {
         String keycloakId = principal.getClaimAsString("sub");
         return ResponseEntity.ok(clienteService.obtenerClientePorKeycloakId(keycloakId));
     }
     
-    // --- NUEVO ENDPOINT (para Clientes) ---
     @GetMapping("/mi-perfil")
     @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<Cliente> getMiPerfil(@AuthenticationPrincipal Jwt principal) {

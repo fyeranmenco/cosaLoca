@@ -7,12 +7,7 @@ import jakarta.annotation.PostConstruct;
 
 import java.util.Set;
 
-/**
- * Configura Swagger UI en tiempo de arranque (springdoc 2.x).
- * - Fuerza configUrl
- * - Define las specs disponibles con SwaggerUrl
- * - Ajusta oauth2RedirectUrl para que coincida con la registrada en Keycloak
- */
+
 @Configuration
 public class SwaggerUiConfigurer {
 
@@ -26,21 +21,16 @@ public class SwaggerUiConfigurer {
     public void init() {
         System.out.println("\n\n\n>>> SwaggerUiConfigurer.init() ejecutándose con SwaggerUiConfigProperties\n\n\n");
 
-        // 1) Forzar configUrl (ruta relativa vía gateway)
         props.setConfigUrl("/api/camiones/v3/api-docs/swagger-config");
 
-        // 2) Registrar la spec pública usando SwaggerUrl
         SwaggerUrl clientesSpec = new SwaggerUrl(
-                "camiones",                                // nombre visible
-                "/api/camiones/v3/api-docs",               // URL de la spec
-                "/api/camiones/v3/api-docs/swagger-config" // URL del swagger-config
+                "camiones",                                
+                "/api/camiones/v3/api-docs",               
+                "/api/camiones/v3/api-docs/swagger-config" 
         );
         props.setUrls(Set.of(clientesSpec));
 
-        // 3) Forzar la redirect pública
         props.setOauth2RedirectUrl("http://localhost:8080/api/camiones/swagger-ui/oauth2-redirect.html");
 
-        // Si preferís absoluta:
-        // props.setOauth2RedirectUrl("http://localhost:8080/api/clientes/swagger-ui/oauth2-redirect.html");
     }
 }

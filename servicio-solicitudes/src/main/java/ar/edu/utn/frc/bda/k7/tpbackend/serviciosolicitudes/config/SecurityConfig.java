@@ -18,18 +18,14 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-// Habilita las anotaciones @PreAuthorize y @PostAuthorize en los Controllers
 @EnableMethodSecurity(prePostEnabled = true) 
 public class SecurityConfig {
 
-    /**
-     * Define la cadena de filtros de seguridad para las peticiones HTTP.
-    //  */
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Deshabilita CSRF: Las APIs REST son stateless, no necesitan esta protección.
-            .csrf(AbstractHttpConfigurer::disable)
+             .csrf(AbstractHttpConfigurer::disable)
             
             .authorizeHttpRequests(authorize -> authorize
 				.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/actuator/**").permitAll() 
@@ -64,7 +60,7 @@ public class SecurityConfig {
                         .collect(Collectors.toList());
                 }
             }
-            return grantedAuthoritiesConverter.convert(jwt); // Devuelve solo los roles estándar si no encuentra los de Keycloak
+            return grantedAuthoritiesConverter.convert(jwt);  
         });
         
         return jwtAuthenticationConverter;

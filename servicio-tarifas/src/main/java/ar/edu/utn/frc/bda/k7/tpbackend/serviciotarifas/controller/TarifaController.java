@@ -18,7 +18,7 @@ public class TarifaController {
     private final TarifaService tarifaService;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()") // Abierto a todos los servicios autenticados
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Tarifa>> getAllTarifas() {
         return ResponseEntity.ok(tarifaService.getAll());
     }

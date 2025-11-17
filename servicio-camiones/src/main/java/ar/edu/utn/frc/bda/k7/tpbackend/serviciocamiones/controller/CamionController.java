@@ -2,7 +2,7 @@ package ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.controller;
 
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.api.ICamionRestAPI;
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.model.Camion;
-import org.springframework.security.oauth2.jwt.Jwt; // <-- Importar
+import org.springframework.security.oauth2.jwt.Jwt; 
 import ar.edu.utn.frc.bda.k7.tpbackend.serviciocamiones.service.CamionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,9 +41,15 @@ public class CamionController implements ICamionRestAPI {
                 .orElseGet(() -> ResponseEntity.notFound().build()); 
     }
 
+	@GetMapping
+	@PreAuthorize("hasRole('ADMIN') or hasRole('CLIENTE') or hasRole('TRANSPORTISTA')")
+	public ResponseEntity<List<Camion>> obtenerTodosLosCamiones() {
+		return ResponseEntity.ok(camionService.obtenerTodosLosCamiones());
+	}
+
    
     @GetMapping("/disponibles/aptos")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CLIENTE') or hasRole('TRANSPORTISTA')")
     public ResponseEntity<List<Camion>> obtenerCamionesDisponiblesAptos(
             @RequestParam Double peso, 
             @RequestParam Double volumen) {
@@ -52,7 +58,7 @@ public class CamionController implements ICamionRestAPI {
     
     
     @PutMapping("/{id}/disponibilidad")
-    @PreAuthorize("isAuthenticated()") // Solo accesible internamente o por un admin
+    @PreAuthorize("isAuthenticated()") 
     public ResponseEntity<Camion> actualizarDisponibilidad(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
         return ResponseEntity.ok(camionService.actualizarDisponibilidad(id, body.get("disponible")));
     }

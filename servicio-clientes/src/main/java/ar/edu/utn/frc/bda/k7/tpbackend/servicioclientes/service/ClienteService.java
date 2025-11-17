@@ -47,19 +47,16 @@ public class ClienteService {
         return persistenciaCliente.save(cliente);
     }
     
-    // --- NUEVO MÉTODO (para Clientes) ---
     public Cliente obtenerMiPerfil(String keycloakId) {
         return persistenciaCliente.findByIdUsuarioKeyCloak(keycloakId)
             .orElseThrow(() -> new NoSuchElementException("No se encontró un perfil de cliente para el usuario."));
     }
     
-    // --- NUEVO MÉTODO (para Servicios Internos) ---
     public Cliente obtenerClientePorKeycloakId(String keycloakId) {
         return persistenciaCliente.findByIdUsuarioKeyCloak(keycloakId)
             .orElseThrow(() -> new NoSuchElementException("Cliente no encontrado por Keycloak ID"));
     }
 
-    // --- NUEVO MÉTODO (para Servicios Internos) ---
     public boolean existeClientePorKeycloakId(String keycloakId) {
         return persistenciaCliente.existsByIdUsuarioKeyCloak(keycloakId);
     }

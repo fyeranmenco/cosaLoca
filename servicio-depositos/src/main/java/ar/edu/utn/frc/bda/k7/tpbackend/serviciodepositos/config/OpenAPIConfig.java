@@ -17,11 +17,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenAPIConfig {
 
-    // 1. Define el nombre del "Security Scheme"
     private static final String SECURITY_SCHEME_NAME = "keycloak_oauth2";
     
-    // 2. Define las URLs PÚBLICAS (a través del Gateway) de tu Keycloak
-    // Esto usa la ruta que ya definiste en tu application.yml del Gateway
+    
     private static final String AUTH_SERVER_URL = "http://localhost:8181/realms/tpbackend/protocol/openid-connect";
 
     @Bean
@@ -41,11 +39,11 @@ public class OpenAPIConfig {
                         .type(SecurityScheme.Type.OAUTH2)
                         .flows(new OAuthFlows()
                             .authorizationCode(new OAuthFlow()
-                                // URL para la página de login de Keycloak
+                                
                                 .authorizationUrl(AUTH_SERVER_URL + "/auth")
-                                // URL para intercambiar el código por un token
+                                 
                                 .tokenUrl(AUTH_SERVER_URL + "/token")
-                                .scopes(null) // Puedes dejar los scopes vacíos
+                                .scopes(null)  
                             )
                         )
                     )

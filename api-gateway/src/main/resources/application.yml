@@ -15,27 +15,22 @@ spring:
     gateway:
       routes:
 
-        # ====================================================
-        # 1. RUTA CRÍTICA DE AUTENTICACIÓN (KEYCLOAK)
-        # ====================================================
+       
         - id: keycloak_auth
-          uri: http://keycloak:8181 # <-- URL directa (ya estaba así)
+          uri: http://keycloak:8181 
           predicates:
             - Path=/realms/tpbackend/**
         
-        # ====================================================
-        # 2. RUTAS DE DOCUMENTACIÓN (SWAGGER)
-        # ====================================================
-        
+       
         # --- CLIENTES (Swagger) ---
         - id: swagger_clientes_ui
-          uri: http://clientes:8081 # <-- CORRECCIÓN: URL Directa
+          uri: http://clientes:8081 
           predicates:
             - Path=/api/clientes/swagger-ui/**
           filters:
             - RewritePath=/api/clientes(.*), $1
         - id: docs_clientes 
-          uri: http://clientes:8081 # <-- CORRECCIÓN: URL Directa
+          uri: http://clientes:8081 
           predicates:
             - Path=/api/clientes/v3/api-docs/**
           filters:
@@ -43,13 +38,13 @@ spring:
 
         # --- SOLICITUDES (Swagger) ---
         - id: swagger_solicitudes_ui
-          uri: http://solicitudes:8082 # <-- CORRECCIÓN: URL Directa
+          uri: http://solicitudes:8082 
           predicates:
             - Path=/api/solicitudes/swagger-ui/**
           filters:
             - RewritePath=/api/solicitudes(.*), $1
         - id: docs_solicitudes
-          uri: http://solicitudes:8082 # <-- CORRECCIÓN: URL Directa
+          uri: http://solicitudes:8082 
           predicates:
             - Path=/api/solicitudes/v3/api-docs/**
           filters:
@@ -57,13 +52,13 @@ spring:
 
         # --- DEPÓSITOS (Swagger) ---
         - id: swagger_depositos_ui
-          uri: http://depositos:8083 # <-- CORRECCIÓN: URL Directa
+          uri: http://depositos:8083 
           predicates:
             - Path=/api/depositos/swagger-ui/**
           filters:
             - RewritePath=/api/depositos(.*), $1
         - id: docs_depositos
-          uri: http://depositos:8083 # <-- CORRECCIÓN: URL Directa
+          uri: http://depositos:8083 
           predicates:
             - Path=/api/depositos/v3/api-docs/**
           filters:
@@ -71,13 +66,13 @@ spring:
 
         # --- CAMIONES (Swagger) ---
         - id: swagger_camiones_ui
-          uri: http://camiones:8084 # <-- CORRECCIÓN: URL Directa
+          uri: http://camiones:8084 
           predicates:
             - Path=/api/camiones/swagger-ui/**
           filters:
             - RewritePath=/api/camiones(.*), $1
         - id: docs_camiones
-          uri: http://camiones:8084 # <-- CORRECCIÓN: URL Directa
+          uri: http://camiones:8084 
           predicates:
             - Path=/api/camiones/v3/api-docs/**
           filters:
@@ -102,7 +97,7 @@ spring:
         
         # --- Clientes (API) ---
         - id: clientes_route
-          uri: http://clientes:8081 # <-- CORRECCIÓN: URL Directa
+          uri: http://clientes:8081 
           predicates:
           - Path=/api/clientes/** 
           filters:
@@ -110,7 +105,7 @@ spring:
             
         # --- Solicitudes (API) ---
         - id: solicitudes_route 
-          uri: http://solicitudes:8082 # <-- CORRECCIÓN: URL Directa
+          uri: http://solicitudes:8082 
           predicates:
             - Path=/api/solicitudes/**
           filters:
@@ -118,7 +113,7 @@ spring:
             
         # --- Depósitos (API) ---
         - id: depositos_route
-          uri: http://depositos:8083 # <-- CORRECCIÓN: URL Directa
+          uri: http://depositos:8083 
           predicates:
             - Path=/api/depositos/**
           filters:
@@ -126,7 +121,7 @@ spring:
 
         # --- Camiones (API) ---
         - id: camiones_route
-          uri: http://camiones:8084 # <-- CORRECCIÓN: URL Directa
+          uri: http://camiones:8084 
           predicates:
             - Path=/api/camiones/**
           filters:
